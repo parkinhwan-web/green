@@ -45,7 +45,7 @@ def predict_waste_category(image_path):
     return list(detected_items) if detected_items else ["일반 쓰레기"]
 
 # 📌 테스트 이미지 예측
-image_path = "test3.jpg"  # 테스트할 이미지 파일 경로
+image_path = "test6.jpg"  # 테스트할 이미지 파일 경로
 result = predict_waste_category(image_path)
 
 print("🔍 탐지된 분리수거 품목:", result)
