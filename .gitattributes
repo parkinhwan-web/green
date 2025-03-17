@@ -1,2 +1,10 @@
-/mvnw text eol=lf
-*.cmd text eol=crlf
+# 기본 설정: 텍스트 파일은 자동으로 LF로 변환
+* text=auto
+
+# Windows에서 CRLF를 강제로 LF로 변환하도록 설정
+*.java text eol=lf
+*.properties text eol=lf
+*.html text eol=lf
+*.js text eol=lf
+*.xml text eol=lf
+*.yml text eol=lf
