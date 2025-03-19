@@ -7,6 +7,9 @@ WORKDIR /app
 # 프로젝트 파일 복사
 COPY . .
 
+# Maven Wrapper(mvnw) 실행 권한 추가
+RUN chmod +x mvnw
+
 # Maven을 사용하여 프로젝트 빌드
 RUN ./mvnw clean package -DskipTests
 
