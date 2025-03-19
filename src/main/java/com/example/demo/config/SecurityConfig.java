@@ -47,6 +47,7 @@ public class SecurityConfig {
                 .requestMatchers("/signup.html", "/css/**", "/js/**", "/images/**").permitAll()
                 .requestMatchers("/users/logout").authenticated()
                 .requestMatchers("/users/{user_id}").authenticated() // ✅ 사용자 정보 조회 API 보호
+                .requestMatchers("/actuator/**").permitAll() // ✅ Actuator 엔드포인트 허용
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form.disable())
