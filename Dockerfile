@@ -21,7 +21,7 @@ WORKDIR /app
 COPY --from=builder /app/target/demo-0.0.1-SNAPSHOT.jar app.jar
 
 # 컨테이너에서 실행할 포트 노출
-EXPOSE ${PORT}
+EXPOSE 8080
 
 # 실행 명령어
 CMD ["java", "-jar", "app.jar"]
