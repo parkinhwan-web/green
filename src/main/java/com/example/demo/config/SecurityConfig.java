@@ -46,11 +46,11 @@ public class SecurityConfig {
                 .requestMatchers("/", "/users/signup", "/users/login").permitAll()
                 .requestMatchers("/signup.html", "/css/**", "/js/**", "/images/**").permitAll()
                 .requestMatchers("/users/logout").authenticated()
-                .requestMatchers("/users/{user_id}").authenticated() // ✅ 사용자 정보 조회 API 보호
+                .requestMatchers("/users/{user_id}").authenticated()
                 .requestMatchers("/actuator/**").permitAll() // ✅ Actuator 엔드포인트 허용
                 .anyRequest().authenticated()
             )
-            .formLogin(form -> form.disable())
+            .formLogin(form -> form.disable()) // 기본 로그인 비활성화
             .logout(logout -> logout.permitAll())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -79,8 +79,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(List.of("*"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
         configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
 
