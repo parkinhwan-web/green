@@ -9,6 +9,9 @@ import org.springframework.context.ApplicationContext;
 public class DemoApplication {
 
     public static void main(String[] args) {
+        // ✅ Render의 자동 포트 할당을 무시하고, 8080으로 강제 설정
+        System.setProperty("server.port", "8080");
+
         // Spring Boot 애플리케이션 실행
         ApplicationContext context = SpringApplication.run(DemoApplication.class, args);
 
