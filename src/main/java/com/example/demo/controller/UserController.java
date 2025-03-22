@@ -18,7 +18,8 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // ✅ CORS 허용
+@CrossOrigin(origins = "https://green-87zt.onrender.com")
+ // ✅ CORS 허용
 public class UserController {
 
     private final UserService userService;
