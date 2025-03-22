@@ -16,7 +16,7 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(@NonNull CorsRegistry registry) { // ✅ @NonNull 추가하여 경고 해결
                 registry.addMapping("/**")
-                        .allowedOriginPatterns("*")  // ✅ 모든 도메인 허용
+                        .allowedOriginPatterns("https://green-87zt.onrender.com")  // ✅ 모든 도메인 허용
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);  // ✅ 허용할 도메인 패턴을 지정했으므로 사용 가능
