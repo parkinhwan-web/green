@@ -5,9 +5,11 @@ com\example\demo\dto\UserLoginRequest.class
 com\example\demo\entity\User.class
 com\example\demo\service\JwtService.class
 com\example\demo\service\UserService.class
+com\example\demo\config\CorsConfig$1.class
 com\example\demo\config\JwtConfig.class
 com\example\demo\service\UserDetailsServiceImpl.class
 META-INF\spring-configuration-metadata.json
+com\example\demo\config\CorsConfig.class
 com\example\demo\repository\UserRepository.class
 com\example\demo\dto\UserSignupResponse$UserSignupResponseBuilder.class
 com\example\demo\config\SecurityConfig.class
