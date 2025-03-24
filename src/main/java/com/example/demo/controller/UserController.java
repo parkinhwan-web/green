@@ -117,4 +117,16 @@ public class UserController {
         }
     }
 
+    @DeleteMapping("/{user_id}")
+    @PreAuthorize("isAuthenticated()") // 로그인된 사용자만 가능
+    public ResponseEntity<?> deleteUser(@PathVariable("user_id") Long userId) {
+        try {
+            userService.deleteUser(userId);
+            return ResponseEntity.ok().body("{\"message\": \"계정 삭제 성공!\"}");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{\"error\": \"" + e.getMessage() + "\"}");
+        }
+    }
+
+
 }

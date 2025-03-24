@@ -89,4 +89,14 @@ public class UserService {
 
         return new UserUpdateResponse("사용자 정보 수정 성공!");
     }
+
+    @Transactional
+    public void deleteUser(Long userId) {
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isEmpty()) {
+            throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+        }
+        userRepository.deleteById(userId);
+    }
+
 }
