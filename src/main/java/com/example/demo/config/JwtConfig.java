@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 public class JwtConfig {
     private String secret;
 
-    public String getSecret() {
+    public String getSecret() { 
         return secret;
     }
 
