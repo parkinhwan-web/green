@@ -128,5 +128,23 @@ public class UserController {
         }
     }
 
+    @GetMapping("/profile")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getProfile(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"JWT 토큰이 필요합니다.\"}");
+        }
+
+        String token = authHeader.substring(7); // "Bearer " 제거
+        String email = jwtService.extractEmail(token); // ✅ 토큰에서 이메일 추출
+
+        Optional<User> user = userService.getProfile(email);
+        if (user.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{\"message\": \"사용자를 찾을 수 없습니다.\"}");
+        }
+
+        return ResponseEntity.ok(user.get());
+    }
+
 
 }

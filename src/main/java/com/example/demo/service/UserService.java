@@ -99,4 +99,10 @@ public class UserService {
         userRepository.deleteById(userId);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<User> getProfile(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+
 }
