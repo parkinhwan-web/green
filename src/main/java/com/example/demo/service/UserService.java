@@ -1,9 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.UserLoginRequest;
-import com.example.demo.dto.UserLoginResponse;
-import com.example.demo.dto.UserSignupRequest;
-import com.example.demo.dto.UserSignupResponse;
+import com.example.demo.dto.*;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.util.JwtUtil;
@@ -21,11 +18,9 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
-    private final PasswordEncoder passwordEncoder; // ✅ PasswordEncoder를 Spring 빈으로 주입
+    private final PasswordEncoder passwordEncoder;
 
-    /**
-     * ✅ 회원가입 메서드
-     */
+    // ✅ 회원가입
     @Transactional
     public UserSignupResponse signup(UserSignupRequest request) {
         if (request.getEmail() == null || request.getUsername() == null || request.getPassword() == null) {
@@ -36,11 +31,10 @@ public class UserService {
             throw new IllegalStateException("이미 가입된 이메일입니다.");
         }
 
-        // 사용자 엔티티 생성
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword())); // ✅ 비밀번호 암호화
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         User savedUser = userRepository.save(user);
 
@@ -51,9 +45,7 @@ public class UserService {
                 .build();
     }
 
-    /**
-     * ✅ 로그인 메서드 (JWT 발급)
-     */
+    // ✅ 로그인
     @Transactional(readOnly = true)
     public UserLoginResponse login(UserLoginRequest request) {
         Optional<User> optionalUser = userRepository.findByEmail(request.getEmail());
@@ -63,21 +55,38 @@ public class UserService {
         }
 
         User user = optionalUser.get();
-        String token = jwtUtil.generateToken(user.getEmail()); // ✅ JWT 토큰 생성 (email 사용)
+        String token = jwtUtil.generateToken(user.getEmail());
 
         return UserLoginResponse.builder()
                 .message("로그인 성공!")
-                .email(user.getEmail()) 
-                .token(token) // ✅ JWT 토큰 포함
-                .expiresIn(3600) // ✅ 토큰 만료 시간 (초)
+                .email(user.getEmail())
+                .token(token)
+                .expiresIn(3600)
                 .build();
     }
 
-    /**
-     * ✅ 사용자 정보 조회 메서드
-     */
+    // ✅ 사용자 정보 조회
     @Transactional(readOnly = true)
     public Optional<User> getUserById(Long userId) {
         return userRepository.findById(userId);
+    }
+
+    // ✅ 사용자 정보 수정
+    @Transactional
+    public UserUpdateResponse updateUser(Long userId, UserUpdateRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다."));
+
+        if (request.getUsername() != null) {
+            user.setUsername(request.getUsername());
+        }
+
+        if (request.getEmail() != null) {
+            user.setEmail(request.getEmail());
+        }
+
+        userRepository.save(user);
+
+        return new UserUpdateResponse("사용자 정보 수정 성공!");
     }
 }

@@ -12,6 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.example.demo.dto.UserUpdateRequest;
+import com.example.demo.dto.UserUpdateResponse;
+
 
 import java.util.Optional;
 
@@ -94,4 +97,24 @@ public class UserController {
 
         return ResponseEntity.ok(user.get()); // ✅ 200 OK, 사용자 정보 반환
     }
+
+        /**
+     * ✅ 사용자 정보 수정 API
+     */
+    @PutMapping("/{user_id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> updateUser(
+            @PathVariable Long user_id,
+            @RequestBody UserUpdateRequest request
+    ) {
+        try {
+            UserUpdateResponse response = userService.updateUser(user_id, request);
+            return ResponseEntity.ok(response); // 200 OK
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{\"error\": \"" + e.getMessage() + "\"}");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"error\": \"" + e.getMessage() + "\"}");
+        }
+    }
+
 }
