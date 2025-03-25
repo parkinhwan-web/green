@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 public class UserLoginResponse {
     private String message;
     private String email;  
+    private String username;
     private String token;
     private int expiresIn;
 }

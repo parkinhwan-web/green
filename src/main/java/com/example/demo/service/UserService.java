@@ -20,7 +20,9 @@ public class UserService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
-    // ✅ 회원가입
+    /**
+     * ✅ 회원가입
+     */
     @Transactional
     public UserSignupResponse signup(UserSignupRequest request) {
         if (request.getEmail() == null || request.getUsername() == null || request.getPassword() == null) {
@@ -32,20 +34,24 @@ public class UserService {
         }
 
         User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setUsername(request.getUsername()); // 사용자명
+        user.setEmail(request.getEmail());       // 로그인용 이메일
+        user.setPassword(passwordEncoder.encode(request.getPassword())); // 비밀번호 암호화
 
         User savedUser = userRepository.save(user);
 
         return UserSignupResponse.builder()
                 .message("회원가입 성공!")
                 .userId(savedUser.getId())
+                .username(savedUser.getUsername()) 
+                .email(savedUser.getEmail())  
                 .createdAt(ZonedDateTime.now().toString())
                 .build();
     }
 
-    // ✅ 로그인
+    /**
+     * ✅ 로그인 (JWT 발급)
+     */
     @Transactional(readOnly = true)
     public UserLoginResponse login(UserLoginRequest request) {
         Optional<User> optionalUser = userRepository.findByEmail(request.getEmail());
@@ -60,18 +66,23 @@ public class UserService {
         return UserLoginResponse.builder()
                 .message("로그인 성공!")
                 .email(user.getEmail())
+                .username(user.getUsername())
                 .token(token)
                 .expiresIn(3600)
                 .build();
     }
 
-    // ✅ 사용자 정보 조회
+    /**
+     * ✅ 사용자 정보 조회 (user_id로)
+     */
     @Transactional(readOnly = true)
     public Optional<User> getUserById(Long userId) {
         return userRepository.findById(userId);
     }
 
-    // ✅ 사용자 정보 수정
+    /**
+     * ✅ 사용자 정보 수정
+     */
     @Transactional
     public UserUpdateResponse updateUser(Long userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId)
@@ -90,19 +101,23 @@ public class UserService {
         return new UserUpdateResponse("사용자 정보 수정 성공!");
     }
 
+    /**
+     * ✅ 사용자 삭제
+     */
     @Transactional
     public void deleteUser(Long userId) {
-        Optional<User> user = userRepository.findById(userId);
-        if (user.isEmpty()) {
+        if (!userRepository.existsById(userId)) {
             throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
         }
+
         userRepository.deleteById(userId);
     }
 
+    /**
+     * ✅ 사용자 프로필 조회 (이메일 기반, JWT에서 추출)
+     */
     @Transactional(readOnly = true)
     public Optional<User> getProfile(String email) {
         return userRepository.findByEmail(email);
     }
-
-
 }

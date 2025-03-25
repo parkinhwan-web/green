@@ -13,27 +13,28 @@ import java.util.List;
 
 @Entity
 @Getter
-@Setter // ✅ Setter 추가 (자동 생성)
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
 public class User implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String email;
+    private String username; // 사용자 이름 (로그인 시 사용할 식별자)
+
+    @Column(unique = true, nullable = false)
+    private String email;    // 이메일 (별도 정보로 사용)
 
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private String username;
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        return List.of(); // 권한 없음
     }
 
     @Override
@@ -41,9 +42,10 @@ public class User implements UserDetails {
         return password;
     }
 
+    // ✅ 이제 진짜 username 반환 (Spring Security가 여기 기준으로 로그인)
     @Override
     public String getUsername() {
-        return email; // ✅ 이메일을 username으로 사용
+        return username;
     }
 
     @Override
