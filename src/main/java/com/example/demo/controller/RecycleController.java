@@ -18,7 +18,11 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RecycleController {
 
     private final AtomicLong analysisIdGenerator = new AtomicLong(1); // 임시 분석 ID 생성기
+    private final AtomicLong logIdGenerator = new AtomicLong(1000);   // 임시 로그 ID 생성기
 
+    /**
+     * ✅ 이미지 분석 요청 API
+     */
     @PostMapping("/analyze")
     @PreAuthorize("isAuthenticated()") // 로그인한 사용자만 요청 가능
     public ResponseEntity<?> analyzeImage(@RequestParam("image") MultipartFile image) {
@@ -36,5 +40,31 @@ public class RecycleController {
         response.put("created_at", ZonedDateTime.now().toString());
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+    }
+
+    /**
+     * ✅ 분리수거 활동 기록 API
+     */
+    @PostMapping("/log")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> recordRecycleLog(@RequestBody Map<String, Object> request) {
+        // 간단한 유효성 검사
+        if (!request.containsKey("user_id") ||
+            !request.containsKey("analytic_id") ||
+            !request.containsKey("disposal_category") ||
+            !request.containsKey("disposal_method")) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "필수 항목이 누락되었습니다."));
+        }
+
+        long logId = logIdGenerator.getAndIncrement();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "분리수거 기록이 기록되었습니다.");
+        response.put("log_id", logId);
+        response.put("created_at", ZonedDateTime.now().toString());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

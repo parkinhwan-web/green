@@ -120,4 +120,6 @@ public class UserService {
     public Optional<User> getProfile(String email) {
         return userRepository.findByEmail(email);
     }
+
+    
 }
