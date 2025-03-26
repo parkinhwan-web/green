@@ -56,7 +56,8 @@ public class RecycleController {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("message", e.getMessage()));
+                .body(Map.of("message", e.getMessage()));
         }
     }
+
 }
