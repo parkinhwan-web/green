@@ -7,6 +7,6 @@ import lombok.Getter;
 @Builder
 public class RecycleLogResponse {
     private String message;
-    private Long logId;
+    private Long count;
     private String createdAt;
 }
