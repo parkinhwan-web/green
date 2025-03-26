@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.RecycleLogRequest;
 import com.example.demo.dto.RecycleLogResponse;
+import com.example.demo.entity.RecycleAnalysisResult;
 import com.example.demo.service.RecycleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ public class RecycleController {
      * ✅ 이미지 분석 요청 API
      */
     @PostMapping("/analyze")
-    @PreAuthorize("isAuthenticated()") // 로그인한 사용자만 요청 가능
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> analyzeImage(@RequestParam("image") MultipartFile image) {
         if (image.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -56,8 +57,31 @@ public class RecycleController {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("message", e.getMessage()));
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 
+    /**
+     * ✅ 분석 결과 조회 API
+     */
+    @GetMapping("/result/{analysis_id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getAnalysisResult(@PathVariable("analysis_id") Long analysisId) {
+        try {
+            RecycleAnalysisResult result = recycleService.getResultByAnalysisId(analysisId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("analysis_id", result.getAnalysisId());
+            response.put("category", result.getCategory());
+            response.put("confidence", result.getConfidence());
+            response.put("disposal_method", result.getDisposalMethod());
+            response.put("created_at", result.getCreatedAt().toString());
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
 }
