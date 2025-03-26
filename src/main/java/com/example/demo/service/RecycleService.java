@@ -15,8 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class RecycleService {
 
     private final RecycleLogRepository recycleLogRepository;
-    private final RecycleAnalysisResultRepository analysisResultRepository;
+    private final RecycleAnalysisResultRepository recycleAnalysisResultRepository; // ✅ 이름 수정 완료
 
+    /**
+     * ✅ 분리수거 기록 저장
+     */
     @Transactional
     public RecycleLogResponse saveLog(RecycleLogRequest request) {
         RecycleLog log = new RecycleLog();
@@ -34,9 +37,20 @@ public class RecycleService {
                 .build();
     }
 
+    /**
+     * ✅ 분석 결과 조회
+     */
     @Transactional(readOnly = true)
     public RecycleAnalysisResult getResultByAnalysisId(Long analysisId) {
-        return analysisResultRepository.findByAnalysisId(analysisId)
+        return recycleAnalysisResultRepository.findByAnalysisId(analysisId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 분석 결과가 없습니다."));
+    }
+
+    /**
+     * ✅ 분석 결과 저장 (테스트용)
+     */
+    @Transactional
+    public void saveAnalysisResult(RecycleAnalysisResult result) {
+        recycleAnalysisResultRepository.save(result);
     }
 }

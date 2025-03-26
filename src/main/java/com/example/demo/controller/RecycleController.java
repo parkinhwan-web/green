@@ -69,19 +69,30 @@ public class RecycleController {
     public ResponseEntity<?> getAnalysisResult(@PathVariable("analysis_id") Long analysisId) {
         try {
             RecycleAnalysisResult result = recycleService.getResultByAnalysisId(analysisId);
-
             Map<String, Object> response = new HashMap<>();
             response.put("analysis_id", result.getAnalysisId());
             response.put("category", result.getCategory());
             response.put("confidence", result.getConfidence());
             response.put("disposal_method", result.getDisposalMethod());
             response.put("created_at", result.getCreatedAt().toString());
-
             return ResponseEntity.ok(response);
-
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", e.getMessage()));
         }
+    }
+
+    /**
+     * ✅ 테스트용: 분석 결과 더미 데이터 삽입 API
+     */
+    @PostMapping("/insert-dummy")
+    public ResponseEntity<?> insertDummy() {
+        RecycleAnalysisResult result = new RecycleAnalysisResult();
+        result.setAnalysisId(456L);
+        result.setCategory("플라스틱");
+        result.setConfidence(0.95);
+        result.setDisposalMethod("플라스틱 전용 수거함에 버려주세요.");
+        recycleService.saveAnalysisResult(result);
+        return ResponseEntity.ok(Map.of("message", "테스트용 분석 결과가 저장되었습니다."));
     }
 }
