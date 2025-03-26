@@ -26,7 +26,7 @@ public class RecycleService {
 
         return RecycleLogResponse.builder()
                 .message("분리수거 기록이 기록되었습니다.")
-                .logId(saved.getId())
+                .count(saved.getId())
                 .createdAt(saved.getCreatedAt().toString())
                 .build();
     }
