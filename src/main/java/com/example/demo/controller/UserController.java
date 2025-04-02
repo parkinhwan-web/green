@@ -1,8 +1,10 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.*;
+import com.example.demo.entity.Point;
 import com.example.demo.entity.User;
 import com.example.demo.service.JwtService;
+import com.example.demo.service.RecycleService;
 import com.example.demo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -10,6 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -20,6 +25,7 @@ public class UserController {
 
     private final UserService userService;
     private final JwtService jwtService;
+    private final RecycleService recycleService; // ✅ 포인트 조회를 위해 추가
 
     /**
      * ✅ 회원가입 API
@@ -148,7 +154,6 @@ public class UserController {
                     .body("{\"message\": \"사용자를 찾을 수 없습니다.\"}");
         }
 
-        // ✅ UserProfileResponse DTO 사용
         UserProfileResponse response = UserProfileResponse.builder()
                 .id(user.get().getId())
                 .username(user.get().getUsername())
@@ -156,5 +161,24 @@ public class UserController {
                 .build();
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * ✅ 포인트 조회 API
+     */
+    @GetMapping("/{user_id}/points")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getUserPoints(@PathVariable("user_id") Long userId) {
+        try {
+            Point point = recycleService.getUserPointInfo(userId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("user_id", point.getUserId());
+            response.put("points", point.getPoints());
+            response.put("last_updated", point.getUpdatedAt().toString());
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
+        }
     }
 }
