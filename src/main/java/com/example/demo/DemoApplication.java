@@ -1,12 +1,14 @@
 package com.example.demo;
 
+import com.example.demo.entity.Point;
 import com.example.demo.entity.RecycleAnalysisResult;
+import com.example.demo.repository.PointRepository;
 import com.example.demo.repository.RecycleAnalysisResultRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.core.env.Environment;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.env.Environment;
 import org.springframework.context.annotation.Bean;
 
 import java.time.ZonedDateTime;
@@ -31,12 +33,14 @@ public class DemoApplication {
         System.out.println("✅ 현재 설정된 server.port: " + serverPort);
     }
 
-    // ✅ 애플리케이션 실행 시 테스트용 분석 결과를 자동 저장
+    // ✅ 테스트용 분석 결과 + 포인트 자동 삽입
     @Bean
-    public CommandLineRunner initTestData(RecycleAnalysisResultRepository repository) {
+    public CommandLineRunner initTestData(RecycleAnalysisResultRepository resultRepo,
+                                          PointRepository pointRepo) {
         return args -> {
+            // 분석 결과 삽입
             Long testAnalysisId = 456L;
-            if (repository.findByAnalysisId(testAnalysisId).isEmpty()) {
+            if (resultRepo.findByAnalysisId(testAnalysisId).isEmpty()) {
                 RecycleAnalysisResult result = new RecycleAnalysisResult();
                 result.setAnalysisId(testAnalysisId);
                 result.setCategory("플라스틱");
@@ -44,8 +48,20 @@ public class DemoApplication {
                 result.setDisposalMethod("플라스틱 전용 수거함에 버려주세요.");
                 result.setCreatedAt(ZonedDateTime.now());
 
-                repository.save(result);
-                System.out.println("✅ 테스트용 분석 결과가 DB에 저장되었습니다. (analysis_id = 456)");
+                resultRepo.save(result);
+                System.out.println("✅ 테스트용 분석 결과 저장 완료 (analysis_id = 456)");
+            }
+
+            // 포인트 데이터 삽입
+            Long testUserId = 123L;
+            if (pointRepo.findByUserId(testUserId).isEmpty()) {
+                Point point = new Point();
+                point.setUserId(testUserId);
+                point.setPoints(150);
+                point.setUpdatedAt(ZonedDateTime.now());
+
+                pointRepo.save(point);
+                System.out.println("✅ 테스트용 포인트 데이터 저장 완료 (user_id = 123)");
             }
         };
     }
