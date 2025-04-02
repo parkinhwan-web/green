@@ -1,7 +1,10 @@
 package com.example.demo.service;
 
+
+import com.example.demo.entity.Point;
 import com.example.demo.dto.*;
 import com.example.demo.entity.User;
+import com.example.demo.repository.PointRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final PointRepository pointRepository;
 
     /**
      * ✅ 회원가입
@@ -121,5 +125,22 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    public PointUsageResponse usePoints(Long userId, PointUsageRequest request) {
+        Point point = pointRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("포인트 정보가 없습니다."));
+    
+        if (request.getPointsToUse() > point.getPoints()) {
+            throw new IllegalArgumentException("포인트가 부족합니다.");
+        }
+    
+        point.setPoints(point.getPoints() - request.getPointsToUse());
+        pointRepository.save(point);
+    
+        return PointUsageResponse.builder()
+                .message("포인트 사용 성공!")
+                .remainingPoints(point.getPoints())
+                .updatedAt(point.getUpdatedAt().toString())
+                .build();
+    }
     
 }

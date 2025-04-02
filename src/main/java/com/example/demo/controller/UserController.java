@@ -162,7 +162,6 @@ public class UserController {
 
         return ResponseEntity.ok(response);
     }
-
     /**
      * ✅ 포인트 조회 API
      */
@@ -181,4 +180,19 @@ public class UserController {
                     .body(Map.of("message", e.getMessage()));
         }
     }
+
+    @PostMapping("/{user_id}/points/use")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> usePoints(
+            @PathVariable("user_id") Long userId,
+            @RequestBody PointUsageRequest request) {
+        try {
+            PointUsageResponse response = userService.usePoints(userId, request);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
 }
