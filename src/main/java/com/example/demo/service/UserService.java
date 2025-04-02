@@ -1,9 +1,11 @@
 package com.example.demo.service;
 
 
+import com.example.demo.entity.AppSettings;
 import com.example.demo.entity.Point;
 import com.example.demo.dto.*;
 import com.example.demo.entity.User;
+import com.example.demo.repository.AppSettingsRepository;
 import com.example.demo.repository.PointRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.util.JwtUtil;
@@ -23,6 +25,7 @@ public class UserService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final PointRepository pointRepository;
+    private final AppSettingsRepository appSettingsRepository;
 
     /**
      * ✅ 회원가입
@@ -143,4 +146,21 @@ public class UserService {
                 .build();
     }
     
+    public Long getUserIdByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("해당 이메일의 사용자를 찾을 수 없습니다."))
+                .getId();
+    }
+    
+    
+    public AppSettingsResponse getAppSettings(Long userId) {
+        AppSettings settings = appSettingsRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("앱 설정 정보가 없습니다."));
+    
+        return AppSettingsResponse.builder()
+                .theme(settings.getTheme())
+                .notifications(settings.isNotifications())
+                .language(settings.getLanguage())
+                .build();
+    }
 }

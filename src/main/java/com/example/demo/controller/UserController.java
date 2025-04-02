@@ -195,4 +195,26 @@ public class UserController {
         }
     }
 
+    @GetMapping("/settings")
+    @PreAuthorize("isAuthenticated()")
+        public ResponseEntity<?> getAppSettings(@RequestHeader("Authorization") String authHeader) {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "JWT 토큰이 필요합니다."));
+            }
+
+        String token = authHeader.substring(7);
+        String email = jwtService.extractEmail(token);
+        Long userId = userService.getUserIdByEmail(email); // 🔍 이메일로 userId 조회 메서드 필요
+
+        try {
+            AppSettingsResponse response = userService.getAppSettings(userId);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+
 }
