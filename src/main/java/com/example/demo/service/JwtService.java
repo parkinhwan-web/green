@@ -17,14 +17,12 @@ public class JwtService {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
 
-    @Value("${jwt.secret:defaultSecretKey123456789012345678901234567890}") // ✅ 기본값 추가
+    // ✅ 반드시 Base64로 인코딩된 시크릿 키여야 함 (최소 32바이트 인코딩 기준)
+    @Value("${jwt.secret:ZGVmYXVsdEJhc2U2NFNlY3JldEtleTEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNA==}") 
     private String secretKey;
 
-    private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet(); // ✅ 멀티스레드 안전한 블랙리스트 저장 방식
+    private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
 
-    /**
-     * 🔐 서명 키 생성 (Base64 디코딩 후 HMAC-SHA 키 생성)
-     */
     private Key getSigningKey() {
         String trimmedKey = secretKey.trim();
         if (trimmedKey.isEmpty()) {
@@ -33,7 +31,7 @@ public class JwtService {
         try {
             byte[] keyBytes = Decoders.BASE64.decode(trimmedKey);
             if (keyBytes.length < 32) {
-                throw new IllegalStateException("❌ JWT 시크릿 키는 최소 32바이트 이상이어야 합니다.");
+                throw new IllegalStateException("❌ Base64 디코딩된 JWT 키는 최소 32바이트 이상이어야 합니다.");
             }
             return Keys.hmacShaKeyFor(keyBytes);
         } catch (IllegalArgumentException e) {
@@ -41,22 +39,16 @@ public class JwtService {
         }
     }
 
-    /**
-     * 🛠 JWT 토큰 생성 (사용자 역할 포함)
-     */
     public String generateToken(String email, String role) {
         return Jwts.builder()
                 .setSubject(email)
-                .claim("roles", role) // ✅ 사용자 역할 추가
+                .claim("roles", role)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 3600 * 1000)) // 1시간 후 만료
+                .setExpiration(new Date(System.currentTimeMillis() + 3600 * 1000)) // 1시간 유효
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    /**
-     * ✅ JWT 검증 (토큰이 유효한지 확인)
-     */
     public boolean validateToken(String token) {
         if (blacklistedTokens.contains(token)) {
             logger.warn("🚫 블랙리스트된 토큰입니다: {}", token);
@@ -66,7 +58,7 @@ public class JwtService {
             Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
-                .parseClaimsJws(token.trim()); // ✅ 공백 제거 추가
+                .parseClaimsJws(token.trim());
             return true;
         } catch (ExpiredJwtException e) {
             logger.error("❌ JWT 만료됨: {}", e.getMessage());
@@ -82,9 +74,6 @@ public class JwtService {
         return false;
     }
 
-    /**
-     * 🔎 JWT에서 사용자 이메일 추출
-     */
     public String extractEmail(String token) {
         try {
             return Jwts.parserBuilder()
@@ -94,14 +83,11 @@ public class JwtService {
                     .getBody()
                     .getSubject();
         } catch (Exception e) {
-            logger.error("❌ JWT에서 이메일을 추출하는 중 오류 발생: {}", e.getMessage());
+            logger.error("❌ JWT에서 이메일 추출 중 오류 발생: {}", e.getMessage());
             return null;
         }
     }
 
-    /**
-     * 🔎 JWT에서 역할(roles) 정보 추출
-     */
     public String extractRole(String token) {
         try {
             return Jwts.parserBuilder()
@@ -111,17 +97,13 @@ public class JwtService {
                     .getBody()
                     .get("roles", String.class);
         } catch (Exception e) {
-            logger.error("❌ JWT에서 역할을 추출하는 중 오류 발생: {}", e.getMessage());
+            logger.error("❌ JWT에서 역할 추출 중 오류 발생: {}", e.getMessage());
             return null;
         }
     }
 
-    /**
-     * 🚪 로그아웃: JWT 토큰을 블랙리스트에 추가하여 무효화
-     */
     public void invalidateToken(String token) {
         blacklistedTokens.add(token);
         logger.info("🚫 토큰 블랙리스트 추가됨: {}", token);
     }
 }
-
