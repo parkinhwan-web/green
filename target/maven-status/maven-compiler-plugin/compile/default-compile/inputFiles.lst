@@ -1,35 +1,35 @@
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\config\CorsConfig.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\config\JwtConfig.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\config\SecurityConfig.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\controller\HelloController.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\controller\RecycleController.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\controller\UserController.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\DemoApplication.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\dto\AppSettingsResponse.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\dto\PointUsageRequest.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\dto\PointUsageResponse.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\dto\RecycleLogRequest.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\dto\RecycleLogResponse.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\dto\UserLoginRequest.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\dto\UserLoginResponse.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\dto\UserProfileResponse.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\dto\UserSignupRequest.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\dto\UserSignupResponse.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\dto\UserUpdateRequest.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\dto\UserUpdateResponse.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\entity\AppSettings.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\entity\Point.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\entity\RecycleAnalysisResult.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\entity\RecycleLog.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\entity\User.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\repository\AppSettingsRepository.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\repository\PointRepository.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\repository\RecycleAnalysisResultRepository.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\repository\RecycleLogRepository.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\repository\UserRepository.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\security\JwtAuthenticationFilter.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\service\JwtService.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\service\RecycleService.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\service\UserDetailsServiceImpl.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\service\UserService.java
-C:\Users\user\OneDrive\바탕 화면\인환\green\src\main\java\com\example\demo\util\JwtUtil.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\entity\RecycleLog.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\dto\UserLoginRequest.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\controller\HelloController.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\dto\UserSignupResponse.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\repository\PointRepository.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\dto\PointUsageResponse.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\config\SecurityConfig.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\service\JwtService.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\dto\PointUsageRequest.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\dto\UserLoginResponse.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\service\UserDetailsServiceImpl.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\controller\RecycleController.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\dto\UserProfileResponse.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\entity\AppSettings.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\dto\UserSignupRequest.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\security\JwtAuthenticationFilter.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\service\UserService.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\entity\RecycleAnalysisResult.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\repository\UserRepository.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\repository\RecycleAnalysisResultRepository.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\dto\UserUpdateResponse.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\config\JwtConfig.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\controller\UserController.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\entity\Point.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\dto\UserUpdateRequest.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\util\JwtUtil.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\dto\AppSettingsResponse.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\repository\AppSettingsRepository.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\entity\User.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\DemoApplication.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\repository\RecycleLogRepository.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\service\RecycleService.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\dto\RecycleLogResponse.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\dto\RecycleLogRequest.java
+C:\Users\user\Documents\projects\green\src\main\java\com\example\demo\config\CorsConfig.java

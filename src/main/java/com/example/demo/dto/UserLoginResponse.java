@@ -7,11 +7,11 @@ import lombok.AllArgsConstructor;
 
 @Getter
 @Builder
-@NoArgsConstructor  // 기본 생성자 필요
-@AllArgsConstructor // 모든 필드 포함한 생성자 필요
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserLoginResponse {
     private String message;
-    private String email;  
+    private String email;
     private String username;
     private String token;
     private int expiresIn;
