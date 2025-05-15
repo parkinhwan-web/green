@@ -74,6 +74,7 @@ public class UserService {
                 .message("로그인 성공!")
                 .email(user.getEmail())
                 .username(user.getUsername())
+                .userId(user.getId()) 
                 .token(token)
                 .expiresIn(3600)
                 .build();
