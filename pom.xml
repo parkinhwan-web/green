@@ -48,11 +48,11 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- ✅ Lombok -->
+        <!-- ✅ Lombok (컴파일 포함 및 annotation processor 동시 등록) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <scope>provided</scope>
+            <version>1.18.30</version>
         </dependency>
 
         <!-- ✅ Spring Security -->
@@ -122,14 +122,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
-                </configuration>
             </plugin>
 
             <!-- ✅ 테스트 플러그인 -->
