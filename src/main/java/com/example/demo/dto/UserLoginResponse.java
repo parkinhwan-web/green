@@ -13,6 +13,7 @@ public class UserLoginResponse {
     private String message;
     private String email;
     private String username;
+    private Long userId;
     private String token;
     private int expiresIn;
 }
