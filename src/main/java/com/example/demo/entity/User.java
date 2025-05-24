@@ -67,4 +67,13 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    // ✅ 추가된 getter 메서드들 (명확한 호출을 위해 직접 정의)
+    public Long getUserId() {
+        return this.id;
+    }
+
+    public String getEmailAddress() {
+        return this.email;
+    }
 }

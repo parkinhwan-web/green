@@ -72,9 +72,9 @@ public class UserService {
 
         return UserLoginResponse.builder()
                 .message("로그인 성공!")
-                .email(user.getEmail())
-                .username(user.getUsername())
-                .userId(user.getId()) 
+                .email(user.getEmailAddress())        // ✅ User 엔티티에서 가져온 값
+                .username(user.getUsername())         // ✅ UserDetails 구현체에서 가져온 값
+                .userId(user.getUserId()) 
                 .token(token)
                 .expiresIn(3600)
                 .build();
