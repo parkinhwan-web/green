@@ -72,7 +72,7 @@ public class UserService {
 
         return UserLoginResponse.builder()
                 .message("로그인 성공!")
-                .email(user.getEmailAddress())        // ✅ User 엔티티에서 가져온 값
+                .email(user.getEmail())        // ✅ User 엔티티에서 가져온 값
                 .username(user.getUsername())         // ✅ UserDetails 구현체에서 가져온 값
                 .userId(user.getId()) 
                 .token(token)
