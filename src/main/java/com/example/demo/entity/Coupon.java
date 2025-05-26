@@ -34,8 +34,8 @@ public class Coupon {
     @Column(nullable = false)
     private Integer expireDays;
 
-    @Column(nullable = false, length = 5)  // "true" 또는 "false" 문자열 저장
-    private String available;
+    @Column(nullable = false)
+    private boolean available;  // 🔄 String → boolean
 
     @Column(nullable = false)
     private String description;
