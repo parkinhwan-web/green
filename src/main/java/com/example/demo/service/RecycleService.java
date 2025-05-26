@@ -16,6 +16,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.ZonedDateTime;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -67,12 +74,35 @@ public class RecycleService {
      * ✅ 이미지 분석 및 결과 저장 + 포인트 지급 + 내역 기록
      */
     @Transactional
-    public void analyzeAndSave(MultipartFile image, long analysisId, Long userId) {
-        String category = "플라스틱";
-        double confidence = 0.92;
-        String disposalMethod = "플라스틱 전용 수거함에 버려주세요.";
+    public void analyzeAndSave(MultipartFile image, long analysisId, Long userId) throws IOException {
+        // 1) Python 스크립트 실행
+        String uploadDir = "uploads/";
+        String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
+        File uploadFolder = new File(uploadDir);
+        if (!uploadFolder.exists()) {
+            uploadFolder.mkdirs();
+        }
+        File savedImage = new File(uploadDir + fileName);
+        image.transferTo(savedImage);
 
-        // 분석 결과 저장
+        String pythonOutput = runPythonScript(savedImage.getAbsolutePath());
+
+        // 2) 파싱 로직 (stdout 포맷에 맞게 조정)
+        String category;
+        double confidence;
+        String disposalMethod;
+        if (pythonOutput.startsWith("error:")) {
+            category = "unknown";
+            confidence = 0.0;
+            disposalMethod = "분석 실패";
+        } else {
+            List<String> lines = pythonOutput.lines().collect(Collectors.toList());
+            category        = lines.get(0).trim();
+            confidence      = lines.size() > 1 ? Double.parseDouble(lines.get(1).trim()) : 0.0;
+            disposalMethod  = lines.size() > 2 ? lines.get(2).trim() : "";
+        }
+
+        // 3) 분석 결과 저장
         RecycleAnalysisResult result = new RecycleAnalysisResult();
         result.setAnalysisId(analysisId);
         result.setCategory(category);
@@ -81,13 +111,14 @@ public class RecycleService {
         result.setCreatedAt(ZonedDateTime.now());
         recycleAnalysisResultRepository.save(result);
 
-        // 포인트 지급
-        Point point = pointRepository.findByUserId(userId).orElse(null);
-        if (point == null) {
-            point = new Point();
-            point.setUserId(userId);
-            point.setPoints(0);
-        }
+        // --- 5) 포인트 지급 ---
+        Point point = pointRepository.findByUserId(userId)
+                .orElseGet(() -> {
+                    Point p = new Point();
+                    p.setUserId(userId);
+                    p.setPoints(0);
+                    return p;
+                });
 
         point.setPoints(point.getPoints() + 100);
         point.setUpdatedAt(ZonedDateTime.now());
@@ -106,6 +137,35 @@ public class RecycleService {
 
         // 콘솔 로그
         System.out.println("🎉 [포인트 지급] userId=" + userId + ", 현재 포인트=" + point.getPoints());
+    }
+
+        /**
+     * Python 스크립트(recycle.py)를 호출하고 stdout 전체를 문자열로 반환
+     */
+    private String runPythonScript(String imagePath) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder(
+                "python3", "scripts/recycle.py", imagePath
+            );
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder output = new StringBuilder();
+            String line;
+            while ((line = in.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode == 0) {
+                return output.toString();
+            } else {
+                return "error: script failed with exit code " + exitCode;
+            }
+        } catch (Exception e) {
+            return "error: " + e.getMessage();
+        }
     }
 
     /**
