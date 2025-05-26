@@ -28,7 +28,10 @@ public class RecycleService {
      */
     @Transactional
     public RecycleLogResponse saveLog(RecycleLogRequest request) {
-        // 1. 분리수거 로그 저장
+        // 1. 디버깅: 요청된 userId 확인
+        System.out.println("📌 [DEBUG] 요청된 userId = " + request.getUserId());
+
+        // 2. 분리수거 로그 저장
         RecycleLog log = new RecycleLog();
         log.setUserId(request.getUserId());
         log.setAnalysisId(request.getAnalysisId());
@@ -37,13 +40,14 @@ public class RecycleService {
 
         RecycleLog saved = recycleLogRepository.save(log);
 
-        // 2. 포인트 100P 적립
+        // 3. 포인트 적립
         Point point = pointRepository.findByUserId(request.getUserId()).orElse(null);
 
         if (point == null) {
             point = new Point();
-            point.setUserId(request.getUserId());  // 반드시 설정해야 함
+            point.setUserId(request.getUserId()); // ⚠ 반드시 설정
             point.setPoints(0);
+            System.out.println("📌 [DEBUG] 신규 Point 생성: userId = " + point.getUserId());
         }
 
         point.setPoints(point.getPoints() + 100);
@@ -51,7 +55,7 @@ public class RecycleService {
 
         pointRepository.save(point);
 
-        // 3. 응답
+        // 4. 응답 반환
         return RecycleLogResponse.builder()
                 .message("분리수거 기록이 저장되고 100포인트가 적립되었습니다.")
                 .count(saved.getId())
@@ -81,7 +85,7 @@ public class RecycleService {
      */
     @Transactional
     public void analyzeAndSave(MultipartFile image, long analysisId) {
-        // TODO: 실제 YOLO 추론 결과 반영
+        // TODO: YOLO 분석 결과 반영 예정
         String category = "플라스틱";
         double confidence = 0.92;
         String disposalMethod = "플라스틱 전용 수거함에 버려주세요.";
