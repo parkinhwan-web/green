@@ -37,9 +37,15 @@ public class RecycleService {
 
         RecycleLog saved = recycleLogRepository.save(log);
 
-        // 2. 포인트 100P 적립
+        // 2. 포인트 100P 적립 (기본 생성자 방식으로 안전하게)
         Point point = pointRepository.findByUserId(request.getUserId())
-                .orElseGet(() -> new Point(request.getUserId(), 0));
+                .orElseGet(() -> {
+                    Point p = new Point();
+                    p.setUserId(request.getUserId());
+                    p.setPoints(0);
+                    return p;
+                });
+
         point.setPoints(point.getPoints() + 100);
         point.setUpdatedAt(ZonedDateTime.now());
         pointRepository.save(point);
