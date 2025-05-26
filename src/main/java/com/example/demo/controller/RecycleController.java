@@ -3,11 +3,13 @@ package com.example.demo.controller;
 import com.example.demo.dto.RecycleLogRequest;
 import com.example.demo.dto.RecycleLogResponse;
 import com.example.demo.entity.RecycleAnalysisResult;
+import com.example.demo.security.CustomUserDetails; // ⬅️ 반드시 너의 경로에 맞게 import
 import com.example.demo.service.RecycleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,24 +23,27 @@ import java.util.concurrent.atomic.AtomicLong;
 @RequiredArgsConstructor
 public class RecycleController {
 
-    private final AtomicLong analysisIdGenerator = new AtomicLong(1); // 임시 분석 ID 생성기
+    private final AtomicLong analysisIdGenerator = new AtomicLong(1);
     private final RecycleService recycleService;
 
     /**
-     * ✅ 이미지 분석 요청 API
+     * ✅ 이미지 분석 요청 API (분석 + 포인트 지급)
      */
     @PostMapping("/analyze")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> analyzeImage(@RequestParam("image") MultipartFile image) {
+    public ResponseEntity<?> analyzeImage(
+            @RequestParam("image") MultipartFile image,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
         if (image.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("message", "이미지 파일이 비어 있습니다."));
         }
 
         long analysisId = analysisIdGenerator.getAndIncrement();
+        Long userId = userDetails.getUser().getId(); // ⬅️ 로그인 사용자 ID 추출
 
-        // 🔽 실제 분석 + 저장 수행
-        recycleService.analyzeAndSave(image, analysisId);
+        recycleService.analyzeAndSave(image, analysisId, userId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("analysis_id", analysisId);

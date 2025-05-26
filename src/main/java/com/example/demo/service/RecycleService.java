@@ -4,6 +4,7 @@ import com.example.demo.dto.RecycleLogRequest;
 import com.example.demo.dto.RecycleLogResponse;
 import com.example.demo.entity.RecycleLog;
 import com.example.demo.entity.RecycleAnalysisResult;
+import com.example.demo.entity.Point;
 import com.example.demo.repository.RecycleLogRepository;
 import com.example.demo.repository.PointRepository;
 import com.example.demo.repository.RecycleAnalysisResultRepository;
@@ -11,8 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.example.demo.entity.Point;
 
 import java.time.ZonedDateTime;
 
@@ -62,15 +61,16 @@ public class RecycleService {
     }
 
     /**
-     * ✅ 이미지 분석 및 결과 저장
+     * ✅ 이미지 분석 및 결과 저장 + 포인트 지급
      */
     @Transactional
-    public void analyzeAndSave(MultipartFile image, long analysisId) {
-        // TODO: 추후 YOLO 분석 코드로 교체 필요
+    public void analyzeAndSave(MultipartFile image, long analysisId, Long userId) {
+        // 분석 결과 임시 고정
         String category = "플라스틱";
         double confidence = 0.92;
         String disposalMethod = "플라스틱 전용 수거함에 버려주세요.";
 
+        // 분석 결과 저장
         RecycleAnalysisResult result = new RecycleAnalysisResult();
         result.setAnalysisId(analysisId);
         result.setCategory(category);
@@ -79,6 +79,21 @@ public class RecycleService {
         result.setCreatedAt(ZonedDateTime.now());
 
         recycleAnalysisResultRepository.save(result);
+
+        // 포인트 지급
+        Point point = pointRepository.findByUserId(userId).orElse(null);
+        if (point == null) {
+            point = new Point();
+            point.setUserId(userId);
+            point.setPoints(0);
+        }
+
+        point.setPoints(point.getPoints() + 100);
+        point.setUpdatedAt(ZonedDateTime.now());
+        pointRepository.save(point);
+
+        // 콘솔 로그 출력
+        System.out.println("🎉 [포인트 지급] userId=" + userId + ", 현재 포인트=" + point.getPoints());
     }
 
     /**
