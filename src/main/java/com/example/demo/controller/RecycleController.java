@@ -37,6 +37,9 @@ public class RecycleController {
 
         long analysisId = analysisIdGenerator.getAndIncrement();
 
+        // 🔽 실제 분석 + 저장 수행
+        recycleService.analyzeAndSave(image, analysisId);
+
         Map<String, Object> response = new HashMap<>();
         response.put("analysis_id", analysisId);
         response.put("status", "processing");

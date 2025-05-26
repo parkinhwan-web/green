@@ -8,17 +8,20 @@ import com.example.demo.repository.RecycleLogRepository;
 import com.example.demo.repository.PointRepository;
 import com.example.demo.repository.RecycleAnalysisResultRepository;
 import lombok.RequiredArgsConstructor;
-
-import com.example.demo.entity.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.example.demo.entity.Point;
+
+import java.time.ZonedDateTime;
 
 @RequiredArgsConstructor
 @Service
 public class RecycleService {
 
     private final RecycleLogRepository recycleLogRepository;
-    private final RecycleAnalysisResultRepository recycleAnalysisResultRepository; // ✅ 이름 수정 완료
+    private final RecycleAnalysisResultRepository recycleAnalysisResultRepository;
     private final PointRepository pointRepository;
 
     /**
@@ -58,12 +61,31 @@ public class RecycleService {
         recycleAnalysisResultRepository.save(result);
     }
 
+    /**
+     * ✅ 이미지 분석 및 결과 저장
+     */
+    @Transactional
+    public void analyzeAndSave(MultipartFile image, long analysisId) {
+        // TODO: 추후 YOLO 분석 코드로 교체 필요
+        String category = "플라스틱";
+        double confidence = 0.92;
+        String disposalMethod = "플라스틱 전용 수거함에 버려주세요.";
 
-    // 이 메서드가 반환하는 타입이 org.springframework.data.geo.Point 로 되어있지 않도록!
+        RecycleAnalysisResult result = new RecycleAnalysisResult();
+        result.setAnalysisId(analysisId);
+        result.setCategory(category);
+        result.setConfidence(confidence);
+        result.setDisposalMethod(disposalMethod);
+        result.setCreatedAt(ZonedDateTime.now());
+
+        recycleAnalysisResultRepository.save(result);
+    }
+
+    /**
+     * ✅ 포인트 조회
+     */
     public Point getUserPointInfo(Long userId) {
         return pointRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("포인트 정보가 없습니다."));
     }
-
-
 }
