@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.ZonedDateTime;
 import java.util.UUID;
@@ -28,6 +30,7 @@ import java.util.List;
 @Service
 public class RecycleService {
 
+    private static final Logger log = LoggerFactory.getLogger(RecycleService.class);
     private final RecycleLogRepository recycleLogRepository;
     private final RecycleAnalysisResultRepository recycleAnalysisResultRepository;
     private final PointRepository pointRepository;
@@ -139,6 +142,7 @@ public class RecycleService {
             // 콘솔 로그
             System.out.println("🎉 [포인트 지급] userId=" + userId + ", 현재 포인트=" + point.getPoints());
         } catch (IOException e) {
+            log.error("이미지 처리 중 IOException 발생: {}", e.getMessage(), e);
             throw new RuntimeException("이미지 처리 중 오류 발생", e);
         }
     }
