@@ -3,11 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.RecycleLogRequest;
 import com.example.demo.dto.RecycleLogResponse;
 import com.example.demo.entity.RecycleAnalysisResult;
-<<<<<<< HEAD
-import com.example.demo.security.CustomUserDetails; // ⬅️ 반드시 너의 경로에 맞게 import
-=======
-import com.example.demo.entity.User;
->>>>>>> d429329262168de3f52331cf048980535ac9b81e
+import com.example.demo.security.CustomUserDetails;
 import com.example.demo.service.RecycleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,21 +27,13 @@ public class RecycleController {
     private final RecycleService recycleService;
 
     /**
-<<<<<<< HEAD
-     * ✅ 이미지 분석 요청 API (분석 + 포인트 지급)
-=======
-     * ✅ 이미지 분석 요청 API (분석 결과 저장 + 포인트 적립)
->>>>>>> d429329262168de3f52331cf048980535ac9b81e
+     * ✅ 이미지 분석 요청 API (포인트 자동 지급 포함)
      */
     @PostMapping("/analyze")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> analyzeImage(
             @RequestParam("image") MultipartFile image,
-<<<<<<< HEAD
             @AuthenticationPrincipal CustomUserDetails userDetails
-=======
-            @AuthenticationPrincipal User user
->>>>>>> d429329262168de3f52331cf048980535ac9b81e
     ) {
         if (image.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -53,14 +41,8 @@ public class RecycleController {
         }
 
         long analysisId = analysisIdGenerator.getAndIncrement();
-<<<<<<< HEAD
-        Long userId = userDetails.getUser().getId(); // ⬅️ 로그인 사용자 ID 추출
+        Long userId = userDetails.getUser().getId();
 
-=======
-        Long userId = user.getId(); // 실제 userId 가져오기
-
-        // 분석 + 포인트 적립 수행
->>>>>>> d429329262168de3f52331cf048980535ac9b81e
         recycleService.analyzeAndSave(image, analysisId, userId);
 
         Map<String, Object> response = new HashMap<>();

@@ -6,8 +6,8 @@ import com.example.demo.entity.RecycleLog;
 import com.example.demo.entity.RecycleAnalysisResult;
 import com.example.demo.entity.Point;
 import com.example.demo.repository.RecycleLogRepository;
-import com.example.demo.repository.PointRepository;
 import com.example.demo.repository.RecycleAnalysisResultRepository;
+import com.example.demo.repository.PointRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,12 +24,10 @@ public class RecycleService {
     private final PointRepository pointRepository;
 
     /**
-     * ✅ 분리수거 기록 저장 및 포인트 적립
+     * ✅ 분리수거 기록 저장
      */
     @Transactional
     public RecycleLogResponse saveLog(RecycleLogRequest request) {
-        System.out.println("📌 [DEBUG] 요청된 userId = " + request.getUserId());
-
         RecycleLog log = new RecycleLog();
         log.setUserId(request.getUserId());
         log.setAnalysisId(request.getAnalysisId());
@@ -38,22 +36,8 @@ public class RecycleService {
 
         RecycleLog saved = recycleLogRepository.save(log);
 
-        Point point = pointRepository.findByUserId(request.getUserId()).orElse(null);
-
-        if (point == null) {
-            point = new Point();
-            point.setUserId(request.getUserId());
-            point.setPoints(0);
-            System.out.println("📌 [DEBUG] 신규 Point 생성: userId = " + point.getUserId());
-        }
-
-        point.setPoints(point.getPoints() + 100);
-        point.setUpdatedAt(ZonedDateTime.now());
-
-        pointRepository.save(point);
-
         return RecycleLogResponse.builder()
-                .message("분리수거 기록이 저장되고 100포인트가 적립되었습니다.")
+                .message("분리수거 기록이 기록되었습니다.")
                 .count(saved.getId())
                 .createdAt(saved.getCreatedAt().toString())
                 .build();
@@ -69,10 +53,9 @@ public class RecycleService {
     }
 
     /**
-     * ✅ 분석 결과 저장 + 포인트 적립
+     * ✅ 분석 결과 저장 (테스트용)
      */
     @Transactional
-<<<<<<< HEAD
     public void saveAnalysisResult(RecycleAnalysisResult result) {
         recycleAnalysisResultRepository.save(result);
     }
@@ -82,15 +65,10 @@ public class RecycleService {
      */
     @Transactional
     public void analyzeAndSave(MultipartFile image, long analysisId, Long userId) {
-        // 분석 결과 임시 고정
-=======
-    public void analyzeAndSave(MultipartFile image, long analysisId, Long userId) {
->>>>>>> d429329262168de3f52331cf048980535ac9b81e
         String category = "플라스틱";
         double confidence = 0.92;
         String disposalMethod = "플라스틱 전용 수거함에 버려주세요.";
 
-        // 분석 결과 저장
         RecycleAnalysisResult result = new RecycleAnalysisResult();
         result.setAnalysisId(analysisId);
         result.setCategory(category);
@@ -100,13 +78,7 @@ public class RecycleService {
 
         recycleAnalysisResultRepository.save(result);
 
-<<<<<<< HEAD
-        // 포인트 지급
         Point point = pointRepository.findByUserId(userId).orElse(null);
-=======
-        Point point = pointRepository.findByUserId(userId).orElse(null);
-
->>>>>>> d429329262168de3f52331cf048980535ac9b81e
         if (point == null) {
             point = new Point();
             point.setUserId(userId);
@@ -115,23 +87,9 @@ public class RecycleService {
 
         point.setPoints(point.getPoints() + 100);
         point.setUpdatedAt(ZonedDateTime.now());
-<<<<<<< HEAD
         pointRepository.save(point);
 
-        // 콘솔 로그 출력
         System.out.println("🎉 [포인트 지급] userId=" + userId + ", 현재 포인트=" + point.getPoints());
-=======
-
-        pointRepository.save(point);
-    }
-
-    /**
-     * ✅ 테스트용 분석 결과 저장
-     */
-    @Transactional
-    public void saveAnalysisResult(RecycleAnalysisResult result) {
-        recycleAnalysisResultRepository.save(result);
->>>>>>> d429329262168de3f52331cf048980535ac9b81e
     }
 
     /**
