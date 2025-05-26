@@ -14,7 +14,7 @@ public class CouponService {
     private final CouponRepository couponRepository;
 
     public List<Coupon> getAvailableCoupons() {
-        return couponRepository.findByAvailable("true");
+        return couponRepository.findByAvailable(true); // ✅ boolean 타입
 }
 
 }
