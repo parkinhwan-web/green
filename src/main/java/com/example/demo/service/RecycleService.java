@@ -4,6 +4,7 @@ import com.example.demo.dto.RecycleLogRequest;
 import com.example.demo.dto.RecycleLogResponse;
 import com.example.demo.entity.RecycleLog;
 import com.example.demo.entity.RecycleAnalysisResult;
+import com.example.demo.entity.Point;
 import com.example.demo.repository.RecycleLogRepository;
 import com.example.demo.repository.PointRepository;
 import com.example.demo.repository.RecycleAnalysisResultRepository;
@@ -11,8 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.example.demo.entity.Point;
 
 import java.time.ZonedDateTime;
 
@@ -25,10 +24,11 @@ public class RecycleService {
     private final PointRepository pointRepository;
 
     /**
-     * ✅ 분리수거 기록 저장
+     * ✅ 분리수거 기록 저장 및 포인트 적립
      */
     @Transactional
     public RecycleLogResponse saveLog(RecycleLogRequest request) {
+        // 1. 로그 저장
         RecycleLog log = new RecycleLog();
         log.setUserId(request.getUserId());
         log.setAnalysisId(request.getAnalysisId());
@@ -37,8 +37,16 @@ public class RecycleService {
 
         RecycleLog saved = recycleLogRepository.save(log);
 
+        // 2. 포인트 100P 적립
+        Point point = pointRepository.findByUserId(request.getUserId())
+                .orElseGet(() -> new Point(request.getUserId(), 0));
+        point.setPoints(point.getPoints() + 100);
+        point.setUpdatedAt(ZonedDateTime.now());
+        pointRepository.save(point);
+
+        // 3. 응답
         return RecycleLogResponse.builder()
-                .message("분리수거 기록이 기록되었습니다.")
+                .message("분리수거 기록이 저장되고 100포인트가 적립되었습니다.")
                 .count(saved.getId())
                 .createdAt(saved.getCreatedAt().toString())
                 .build();
@@ -66,7 +74,7 @@ public class RecycleService {
      */
     @Transactional
     public void analyzeAndSave(MultipartFile image, long analysisId) {
-        // TODO: 추후 YOLO 분석 코드로 교체 필요
+        // TODO: YOLO 모델 분석 결과 반영
         String category = "플라스틱";
         double confidence = 0.92;
         String disposalMethod = "플라스틱 전용 수거함에 버려주세요.";
