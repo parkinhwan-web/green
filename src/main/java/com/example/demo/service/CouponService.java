@@ -14,6 +14,7 @@ public class CouponService {
     private final CouponRepository couponRepository;
 
     public List<Coupon> getAvailableCoupons() {
-        return couponRepository.findByAvailableTrue();
-    }
+        return couponRepository.findByAvailable("true");
+}
+
 }
