@@ -74,69 +74,73 @@ public class RecycleService {
      * ✅ 이미지 분석 및 결과 저장 + 포인트 지급 + 내역 기록
      */
     @Transactional
-    public void analyzeAndSave(MultipartFile image, long analysisId, Long userId) throws IOException {
-        // 1) Python 스크립트 실행
-        String uploadDir = "uploads/";
-        String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
-        File uploadFolder = new File(uploadDir);
-        if (!uploadFolder.exists()) {
-            uploadFolder.mkdirs();
+    public void analyzeAndSave(MultipartFile image, long analysisId, Long userId) {
+        try {
+            // 1) Python 스크립트 실행
+            String uploadDir = "uploads/";
+            String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
+            File uploadFolder = new File(uploadDir);
+            if (!uploadFolder.exists()) {
+                uploadFolder.mkdirs();
+            }
+            File savedImage = new File(uploadDir + fileName);
+            image.transferTo(savedImage);
+
+            String pythonOutput = runPythonScript(savedImage.getAbsolutePath());
+
+            // 2) 파싱 로직 (stdout 포맷에 맞게 조정)
+            String category;
+            double confidence;
+            String disposalMethod;
+            if (pythonOutput.startsWith("error:")) {
+                category = "unknown";
+                confidence = 0.0;
+                disposalMethod = "분석 실패";
+            } else {
+                List<String> lines = pythonOutput.lines().collect(Collectors.toList());
+                category        = lines.get(0).trim();
+                confidence      = lines.size() > 1 ? Double.parseDouble(lines.get(1).trim()) : 0.0;
+                disposalMethod  = lines.size() > 2 ? lines.get(2).trim() : "";
+            }
+
+            // 3) 분석 결과 저장
+            RecycleAnalysisResult result = new RecycleAnalysisResult();
+            result.setAnalysisId(analysisId);
+            result.setCategory(category);
+            result.setConfidence(confidence);
+            result.setDisposalMethod(disposalMethod);
+            result.setCreatedAt(ZonedDateTime.now());
+            recycleAnalysisResultRepository.save(result);
+
+            // --- 5) 포인트 지급 ---
+            Point point = pointRepository.findByUserId(userId)
+                    .orElseGet(() -> {
+                        Point p = new Point();
+                        p.setUserId(userId);
+                        p.setPoints(0);
+                        return p;
+                    });
+
+            point.setPoints(point.getPoints() + 100);
+            point.setUpdatedAt(ZonedDateTime.now());
+            pointRepository.save(point);
+
+            // 포인트 지급 내역 기록
+            PointHistory history = new PointHistory();
+            history.setUserId(userId);
+            history.setDate(ZonedDateTime.now());
+            history.setType("적립");
+            history.setReason("AI 분석 리워드");
+            history.setWasteTypeKorean(category); // 분석 결과에서 온 항목
+            history.setPoints(100);
+            history.setBalance(point.getPoints());
+            pointHistoryRepository.save(history);
+
+            // 콘솔 로그
+            System.out.println("🎉 [포인트 지급] userId=" + userId + ", 현재 포인트=" + point.getPoints());
+        } catch (IOException e) {
+            throw new RuntimeException("이미지 처리 중 오류 발생", e);
         }
-        File savedImage = new File(uploadDir + fileName);
-        image.transferTo(savedImage);
-
-        String pythonOutput = runPythonScript(savedImage.getAbsolutePath());
-
-        // 2) 파싱 로직 (stdout 포맷에 맞게 조정)
-        String category;
-        double confidence;
-        String disposalMethod;
-        if (pythonOutput.startsWith("error:")) {
-            category = "unknown";
-            confidence = 0.0;
-            disposalMethod = "분석 실패";
-        } else {
-            List<String> lines = pythonOutput.lines().collect(Collectors.toList());
-            category        = lines.get(0).trim();
-            confidence      = lines.size() > 1 ? Double.parseDouble(lines.get(1).trim()) : 0.0;
-            disposalMethod  = lines.size() > 2 ? lines.get(2).trim() : "";
-        }
-
-        // 3) 분석 결과 저장
-        RecycleAnalysisResult result = new RecycleAnalysisResult();
-        result.setAnalysisId(analysisId);
-        result.setCategory(category);
-        result.setConfidence(confidence);
-        result.setDisposalMethod(disposalMethod);
-        result.setCreatedAt(ZonedDateTime.now());
-        recycleAnalysisResultRepository.save(result);
-
-        // --- 5) 포인트 지급 ---
-        Point point = pointRepository.findByUserId(userId)
-                .orElseGet(() -> {
-                    Point p = new Point();
-                    p.setUserId(userId);
-                    p.setPoints(0);
-                    return p;
-                });
-
-        point.setPoints(point.getPoints() + 100);
-        point.setUpdatedAt(ZonedDateTime.now());
-        pointRepository.save(point);
-
-        // 포인트 지급 내역 기록
-        PointHistory history = new PointHistory();
-        history.setUserId(userId);
-        history.setDate(ZonedDateTime.now());
-        history.setType("적립");
-        history.setReason("AI 분석 리워드");
-        history.setWasteTypeKorean(category); // 분석 결과에서 온 항목
-        history.setPoints(100);
-        history.setBalance(point.getPoints());
-        pointHistoryRepository.save(history);
-
-        // 콘솔 로그
-        System.out.println("🎉 [포인트 지급] userId=" + userId + ", 현재 포인트=" + point.getPoints());
     }
 
         /**
