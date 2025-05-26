@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.ZonedDateTime;
 import java.util.UUID;
@@ -25,6 +27,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 
 @RequiredArgsConstructor
 @Service
@@ -73,23 +78,31 @@ public class RecycleService {
         recycleAnalysisResultRepository.save(result);
     }
 
+    @Value("${app.upload-dir}")          // 🔸 프로퍼티 주입
+    private String uploadDir;
+
     /**
      * ✅ 이미지 분석 및 결과 저장 + 포인트 지급 + 내역 기록
      */
     @Transactional
     public void analyzeAndSave(MultipartFile image, long analysisId, Long userId) {
         try {
-            // 1) Python 스크립트 실행
-            String uploadDir = "uploads/";
-            String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
-            File uploadFolder = new File(uploadDir);
-            if (!uploadFolder.exists()) {
-                uploadFolder.mkdirs();
-            }
-            File savedImage = new File(uploadDir + fileName);
-            image.transferTo(savedImage);
+            /* === (1) 디렉토리 확보 === */
+        Path uploadPath = Paths.get(uploadDir)      // app.upload-dir 프로퍼티 주입
+                               .toAbsolutePath()
+                               .normalize();
+        Files.createDirectories(uploadPath);        // 없으면 자동 생성
 
-            String pythonOutput = runPythonScript(savedImage.getAbsolutePath());
+        /* === (2) 고유 파일명 === */
+        String fileName = UUID.randomUUID() + "_" +
+                          StringUtils.cleanPath(image.getOriginalFilename());
+        Path target = uploadPath.resolve(fileName);
+
+        /* === (3) 저장 === */
+        image.transferTo(target);                   // 〈― FileNotFoundException 해결
+
+        /* === (4) Python 스크립트 실행 === */
+        String pythonOutput = runPythonScript(target.toString());
 
             // 2) 파싱 로직 (stdout 포맷에 맞게 조정)
             String category;
@@ -147,7 +160,7 @@ public class RecycleService {
         }
     }
 
-        /**
+    /**
      * Python 스크립트(recycle.py)를 호출하고 stdout 전체를 문자열로 반환
      */
     private String runPythonScript(String imagePath) {
