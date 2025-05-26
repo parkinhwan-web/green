@@ -4,6 +4,7 @@ import com.example.demo.dto.RecycleLogRequest;
 import com.example.demo.dto.RecycleLogResponse;
 import com.example.demo.entity.RecycleLog;
 import com.example.demo.entity.RecycleAnalysisResult;
+import com.example.demo.entity.Point;
 import com.example.demo.repository.RecycleLogRepository;
 import com.example.demo.repository.PointRepository;
 import com.example.demo.repository.RecycleAnalysisResultRepository;
@@ -11,8 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.example.demo.entity.Point;
 
 import java.time.ZonedDateTime;
 
@@ -54,19 +53,11 @@ public class RecycleService {
     }
 
     /**
-     * ✅ 분석 결과 저장 (테스트용)
+     * ✅ 분석 결과 저장 + 포인트 적립
      */
     @Transactional
-    public void saveAnalysisResult(RecycleAnalysisResult result) {
-        recycleAnalysisResultRepository.save(result);
-    }
-
-    /**
-     * ✅ 이미지 분석 및 결과 저장
-     */
-    @Transactional
-    public void analyzeAndSave(MultipartFile image, long analysisId) {
-        // TODO: 추후 YOLO 분석 코드로 교체 필요
+    public void analyzeAndSave(MultipartFile image, long analysisId, Long userId) {
+        // 1. 분석 결과 저장 (임시 고정값)
         String category = "플라스틱";
         double confidence = 0.92;
         String disposalMethod = "플라스틱 전용 수거함에 버려주세요.";
@@ -79,6 +70,20 @@ public class RecycleService {
         result.setCreatedAt(ZonedDateTime.now());
 
         recycleAnalysisResultRepository.save(result);
+
+        // 2. 포인트 100점 자동 적립
+        Point point = pointRepository.findByUserId(userId).orElse(null);
+
+        if (point == null) {
+            point = new Point();
+            point.setUserId(userId);
+            point.setPoints(0);
+        }
+
+        point.setPoints(point.getPoints() + 100);
+        point.setUpdatedAt(ZonedDateTime.now());
+
+        pointRepository.save(point);
     }
 
     /**

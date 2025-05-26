@@ -3,11 +3,13 @@ package com.example.demo.controller;
 import com.example.demo.dto.RecycleLogRequest;
 import com.example.demo.dto.RecycleLogResponse;
 import com.example.demo.entity.RecycleAnalysisResult;
+import com.example.demo.entity.User;
 import com.example.demo.service.RecycleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,20 +27,24 @@ public class RecycleController {
     private final RecycleService recycleService;
 
     /**
-     * ✅ 이미지 분석 요청 API
+     * ✅ 이미지 분석 요청 API (분석 결과 저장 + 포인트 적립)
      */
     @PostMapping("/analyze")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> analyzeImage(@RequestParam("image") MultipartFile image) {
+    public ResponseEntity<?> analyzeImage(
+            @RequestParam("image") MultipartFile image,
+            @AuthenticationPrincipal User user
+    ) {
         if (image.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("message", "이미지 파일이 비어 있습니다."));
         }
 
         long analysisId = analysisIdGenerator.getAndIncrement();
+        Long userId = user.getId(); // 실제 userId 가져오기
 
-        // 🔽 실제 분석 + 저장 수행
-        recycleService.analyzeAndSave(image, analysisId);
+        // 분석 + 포인트 적립 수행
+        recycleService.analyzeAndSave(image, analysisId, userId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("analysis_id", analysisId);
