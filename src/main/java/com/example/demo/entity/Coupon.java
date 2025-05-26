@@ -1,14 +1,19 @@
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.persistence.Id;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+package com.example.demo.entity;
 
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "coupons")
+@Getter
+@Setter
 public class Coupon {
-    @Id @GeneratedValue private Long id;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private String brandName;
     private String productName;
     private int points;
