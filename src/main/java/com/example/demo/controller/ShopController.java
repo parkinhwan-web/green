@@ -16,9 +16,11 @@ public class ShopController {
 
     private final CouponService couponService;
 
+    /** 로그인한 사용자가 쿠폰 목록을 조회 */
     @GetMapping("/coupons")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Coupon>> getCoupons() {
-        return ResponseEntity.ok(couponService.getAvailableCoupons());
+        // ▶︎ getAvailableCoupons() → getCoupons() 로 변경
+        return ResponseEntity.ok(couponService.getCoupons());
     }
 }

@@ -34,9 +34,7 @@ public class Coupon {
     @Column(nullable = false)
     private Integer expireDays;
 
-    @Column(nullable = false)
-    private boolean available;  // 🔄 String → boolean
-
+    
     @Column(nullable = false)
     private String description;
 }
