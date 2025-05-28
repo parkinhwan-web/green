@@ -4,18 +4,18 @@
 FROM maven:3.9.6-eclipse-temurin-17 AS builder
 WORKDIR /workspace
 
-# 의존성 캐시
-COPY pom.xml .mvn/ mvnw ./
-RUN chmod +x mvnw && ./mvnw -q -B dependency:go-offline
+# 1-A) 의존성 캐시
+COPY pom.xml .
+RUN mvn -q -B dependency:go-offline
 
-# 실제 소스 복사 및 빌드
+# 1-B) 전체 소스 복사 후 패키징
 COPY src ./src
-RUN ./mvnw -q -B clean package -DskipTests
+RUN mvn -q -B clean package -DskipTests
 
 ###############################
 # 2) RUNTIME STAGE – 경량 JRE #
 ###############################
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:17-jre           
 
 # 2-1) Python & Ultralytics 최소 설치
 RUN apt-get update && \
@@ -28,7 +28,7 @@ WORKDIR /app
 COPY --from=builder /workspace/target/demo-*.jar app.jar
 COPY scripts/ ./scripts/
 
-# 2-3) 기본 ENV · 메모리 상한
+# 2-3) ENV · 메모리 상한
 ENV PYTHON_EXE=/usr/bin/python3
 ENV APP_UPLOAD_DIR=/app/uploads
 ENV PORT=8080
