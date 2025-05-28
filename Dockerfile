@@ -12,14 +12,13 @@ RUN mvn -q -B dependency:go-offline
 COPY src ./src
 RUN mvn -q -B clean package -DskipTests
 
-###############################
-# 2) RUNTIME STAGE – 경량 JRE #
-###############################
-FROM eclipse-temurin:17-jre           
+# 2) RUNTIME STAGE – eclipse-temurin:17-jre (bookworm, Python 3.12)
+FROM eclipse-temurin:17-jre
 
-# 2-1) Python & Ultralytics 최소 설치
 RUN apt-get update && \
     apt-get install -y --no-install-recommends python3 python3-pip && \
+    # 🔸 PEP 668 우회 플래그
+    PIP_BREAK_SYSTEM_PACKAGES=1 \
     pip3 install --no-cache-dir ultralytics==8.2.0 opencv-python-headless && \
     rm -rf /var/lib/apt/lists/* /root/.cache
 
