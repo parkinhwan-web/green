@@ -1,35 +1,43 @@
 from ultralytics import YOLO
-import cv2
-import sys
+import cv2, os, sys, argparse
 
-# 모델 로드 (YOLOv8의 best.pt)
-model = YOLO('best.pt')  # YOLOv8에서 훈련한 모델
+# ── 1) 인자 파싱 ────────────────────────────────
+ap = argparse.ArgumentParser()
+ap.add_argument("--image", required=True, help="분석할 이미지 절대경로")
+args = ap.parse_args()
 
-# 이미지 경로 지정
-image_path = sys.argv[1]  # 커맨드라인 인자로 이미지 경로 받기
+# ── 2) 가중치 절대경로(스크립트 기준) ────────────
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+WEIGHT   = os.path.join(BASE_DIR, "best.pt")
+if not os.path.exists(WEIGHT):
+    print(f"error: weight file not found → {WEIGHT}")
+    sys.exit(1)
 
-# 이미지 불러오기
-image = cv2.imread(image_path)
+# ── 3) 모델 로드 & 이미지 읽기 ──────────────────
+model  = YOLO(WEIGHT)
+image  = cv2.imread(args.image)
+if image is None:
+    print("error: cannot read image")
+    sys.exit(1)
 
-# 추론 실행
-results = model(image)
+# ── 4) 추론 ─────────────────────────────────────
+results = model(image, verbose=False)
 
-# 결과 확인 및 출력
-for result in results:
-    boxes = result.boxes
-    for box in boxes:
-        cls_id = int(box.cls[0])  # 클래스 ID
-        conf = float(box.conf[0])  # confidence
-        label = model.names[cls_id]  # 클래스 이름
-        print(f"감지된 객체: {label}")
-        
-        # 바운딩 박스 좌표
-        x1, y1, x2, y2 = map(int, box.xyxy[0])
-        cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.putText(image, f'{label} {conf:.2f}', (x1, y1 - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+# 가장 신뢰도 높은 박스 1개만 사용
+best = max(results[0].boxes, key=lambda b: float(b.conf[0]))
+cls_id     = int(best.cls[0])
+confidence = float(best.conf[0])
+category   = model.names[cls_id]
 
-# # 이미지 결과 보여주기
-# cv2.imshow('Detected', image)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
+# ── 5) 분리수거 안내 매핑 ───────────────────────
+DISPOSAL = {
+    "can":      "캔 전용 수거함에 버려주세요.",
+    "plastic":  "플라스틱 전용 수거함에 버려주세요.",
+    "paper":    "종이류 전용 수거함에 버려주세요.",
+}
+disposal = DISPOSAL.get(category, "일반 쓰레기통에 버려주세요.")
+
+# ── 6) Java 파싱 포맷대로 3줄 출력 ──────────────
+print(category)           # 1줄
+print(f"{confidence:.4f}")# 2줄
+print(disposal)           # 3줄

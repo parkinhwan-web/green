@@ -29,6 +29,8 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.Normalizer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 @RequiredArgsConstructor
@@ -81,6 +83,15 @@ public class RecycleService {
     @Value("${app.upload-dir}")          // 🔸 프로퍼티 주입
     private String uploadDir;
 
+    @Value("${script.python-exe}")
+    private String pythonExe;      // python 또는 /usr/bin/python3
+
+    @Value("${script.path}")
+    private String scriptPath;     // scripts/recycle.py (상대) 또는 /app/scripts/recycle.py
+
+    @Value("${script.weight}")
+    private String weightPath;     // scripts/best.pt 또는 /models/best.pt
+
     /**
      * ✅ 이미지 분석 및 결과 저장 + 포인트 지급 + 내역 기록
      */
@@ -93,16 +104,23 @@ public class RecycleService {
                                .normalize();
         Files.createDirectories(uploadPath);        // 없으면 자동 생성
 
-        /* === (2) 고유 파일명 === */
-        String fileName = UUID.randomUUID() + "_" +
-                          StringUtils.cleanPath(image.getOriginalFilename());
+        String original = StringUtils.getFilename(image.getOriginalFilename());
+        String ascii = Normalizer.normalize(original, Normalizer.Form.NFD)
+                                .replaceAll("[^\\p{ASCII}]", "")       // 한글 제거
+                                .replaceAll("[^a-zA-Z0-9._-]", "_");   // 특수문자 치환
+        String fileName = UUID.randomUUID() + "_" + ascii;
         Path target = uploadPath.resolve(fileName);
 
         /* === (3) 저장 === */
-        image.transferTo(target);                   // 〈― FileNotFoundException 해결
+        image.transferTo(target);
+        if (!Files.exists(target)) {
+            throw new IllegalStateException("파일 저장 실패: " + target);
+        }
 
         /* === (4) Python 스크립트 실행 === */
+        // 👉 절대 경로 & 배열 인자로 안전하게 실행
         String pythonOutput = runPythonScript(target.toString());
+        log.warn("🔍 PY FULL OUTPUT\n{}", pythonOutput);   // **전부** 출력
 
             // 2) 파싱 로직 (stdout 포맷에 맞게 조정)
             String category;
@@ -160,34 +178,34 @@ public class RecycleService {
         }
     }
 
-    /**
-     * Python 스크립트(recycle.py)를 호출하고 stdout 전체를 문자열로 반환
-     */
-    private String runPythonScript(String imagePath) {
-        try {
-            ProcessBuilder pb = new ProcessBuilder(
-                "python3", "scripts/recycle.py", imagePath
-            );
-            pb.redirectErrorStream(true);
-            Process process = pb.start();
+    private String runPythonScript(String imgPath) {
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            StringBuilder output = new StringBuilder();
-            String line;
-            while ((line = in.readLine()) != null) {
-                output.append(line).append("\n");
-            }
+    ProcessBuilder pb = new ProcessBuilder(
+        pythonExe,              // @Value("${script.python-exe}")
+        scriptPath,             // @Value("${script.path}")
+        "--image", imgPath
+        // "--weights", weightPath // @Value("${script.weight}")
+    );
+    pb.redirectErrorStream(true);
 
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                return output.toString();
-            } else {
-                return "error: script failed with exit code " + exitCode;
-            }
-        } catch (Exception e) {
-            return "error: " + e.getMessage();
+    try {
+        Process proc = pb.start();
+        String output;
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
+            output = br.lines().collect(Collectors.joining("\n"));
         }
+        int exit = proc.waitFor();
+        log.info("PYTHON exit={} cmd={}", exit, pb.command());
+
+        if (exit != 0) {
+            return "error: script failed with exit code " + exit + "\n" + output;
+        }
+        return output;
+    } catch (IOException | InterruptedException e) {
+        return "error:" + e.getMessage();
     }
+}
 
     /**
      * ✅ 포인트 조회
