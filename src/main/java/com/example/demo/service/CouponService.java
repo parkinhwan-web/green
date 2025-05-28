@@ -11,10 +11,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CouponService {
 
-    private final CouponRepository couponRepository;
+    private final CouponRepository couponRepository;   // ✅ 그대로 둡니다
 
-    public List<Coupon> getAvailableCoupons() {
-        return couponRepository.findByAvailable(true); // ✅ boolean 타입
+    /* ✨ 수정 포인트 */
+    public List<Coupon> getCoupons() {                 // 메서드 이름만 간단히 변경
+        return couponRepository.findAll();             // 조건-없는 전체 조회로 교체
+    }
 }
 
-}
