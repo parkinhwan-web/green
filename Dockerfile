@@ -13,6 +13,11 @@ RUN chmod +x mvnw
 # Maven을 사용하여 프로젝트 빌드
 RUN ./mvnw clean package -DskipTests
 
+# AI를 위한 python  설치
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    pip3 install --no-cache-dir ultralytics==8.2.0 opencv-python-headless
+
 # 최종 실행 환경 설정
 FROM openjdk:17-jdk-slim
 WORKDIR /app
