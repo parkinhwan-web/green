@@ -6,27 +6,35 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
+@Table(name = "user_coupons")
 public class UserCoupon {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    // 사용자 연관관계
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
+    // 쿠폰 연관관계
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "coupon_id")
     private Coupon coupon;
 
+    @Column(nullable = false)
     private LocalDate expireDate;
 
+    @Column(nullable = false, unique = true, length = 20)
     private String barcode;
 
-    private LocalDateTime purchasedAt;
+    @Column(nullable = false)
+    private ZonedDateTime purchasedAt;  // LocalDateTime → ZonedDateTime으로 일관성 유지
 }

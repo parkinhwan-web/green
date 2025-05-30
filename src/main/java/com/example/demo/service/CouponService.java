@@ -47,11 +47,11 @@ public class CouponService {
         }
 
         point.setPoints(point.getPoints() - couponPoint);
-        pointRepository.save(point); // 생략 가능 (영속 상태)
+        pointRepository.save(point); // 영속성 컨텍스트에 의해 자동 반영 가능
 
         // 포인트 사용 이력 기록
         PointHistory history = new PointHistory();
-        history.setUserId(user.getId());
+        history.setUser(user);  // 변경된 부분
         history.setPoints(-couponPoint);
         history.setReason("상품권 구매: " + coupon.getProductName());
         history.setBalance(point.getPoints());

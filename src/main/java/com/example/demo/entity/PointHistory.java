@@ -20,7 +20,7 @@ public class PointHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ✅ 사용자와의 연관관계 추가
+    /** 사용자와의 연관관계 (userId 대신) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -29,16 +29,16 @@ public class PointHistory {
     private ZonedDateTime date;
 
     @Column(nullable = false)
-    private String type; // 예: "적립" 또는 "사용"
+    private String type; // "적립" 또는 "사용"
 
     @Column(nullable = false)
     private String reason; // 예: "AI 분석 리워드"
 
     private String brandName;        // 사용 시 브랜드명
-    private String wasteTypeKorean;  // 적립 시 폐기물 종류 (선택)
+    private String wasteTypeKorean;  // 적립 시 폐기물 종류
 
     @Column(nullable = false)
-    private int points; // 증감량 (+100, -5000 등)
+    private int points; // 증감량
 
     @Column(nullable = false)
     private int balance; // 변화 후 총 포인트
