@@ -113,7 +113,7 @@ public class CouponService {
         PurchaseResponse response = new PurchaseResponse();
         response.setSuccess(true);
         response.setMessage("쿠폰이 성공적으로 발급되었습니다.");
-        response.setUsedDate(userCoupon.getUsedDate());
+        response.setUsedDate(userCoupon.getUsedDate().toLocalDateTime()); // ✅ 명시적 변환
         response.setCouponImageUrl(imageUrl);
         response.setCouponImageBase64(base64Image);
         response.setCouponDetails(details);
