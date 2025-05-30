@@ -114,8 +114,7 @@ public class CouponService {
         PurchaseResponse response = new PurchaseResponse();
         response.setSuccess(true);
         response.setMessage("쿠폰이 성공적으로 발급되었습니다.");
-        response.setUsedDate(userCoupon.getUsedDate()); // ✅ toLocalDateTime() 제거
-
+        response.setUsedDate(userCoupon.getUsedDate());
         response.setCouponImageUrl(imageUrl);
         response.setCouponImageBase64(base64Image);
         response.setCouponDetails(details);
@@ -124,6 +123,9 @@ public class CouponService {
     }
 
     private String encodeImageToBase64(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank() || imageUrl.equalsIgnoreCase("없음")) {
+            return "";
+        }
         try (InputStream in = new URL(imageUrl).openStream()) {
             byte[] imageBytes = in.readAllBytes();
             return Base64.getEncoder().encodeToString(imageBytes);
