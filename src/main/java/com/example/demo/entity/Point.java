@@ -26,4 +26,9 @@ public class Point {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private ZonedDateTime updatedAt; // 마지막 업데이트 시간
+
+    // ✅ getAmount() 헷갈림 방지를 위한 별도 메서드 (선택적)
+    public int getAmount() {
+        return this.points;
+    }
 }

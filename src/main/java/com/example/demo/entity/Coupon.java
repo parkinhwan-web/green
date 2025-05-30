@@ -23,7 +23,7 @@ public class Coupon {
     private String productName;
 
     @Column(nullable = false)
-    private Integer points;
+    private Integer points; // ✅ 필드명 기준 getter는 getPoints()
 
     @Column(nullable = false)
     private String category;
@@ -34,7 +34,11 @@ public class Coupon {
     @Column(nullable = false)
     private Integer expireDays;
 
-    
     @Column(nullable = false)
     private String description;
+
+    // ✅ 명확한 의미 전달을 위한 getter alias (선택 사항)
+    public int getAmount() {
+        return this.points;
+    }
 }
