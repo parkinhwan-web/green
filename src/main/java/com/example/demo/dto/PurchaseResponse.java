@@ -2,6 +2,7 @@ package com.example.demo.dto;
 
 import lombok.Data;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class PurchaseResponse {
@@ -9,6 +10,12 @@ public class PurchaseResponse {
     private String message;
     private Long userCouponId;
     private int remainingPoints;
+
+    // ✅ 쿠폰 사용용으로 추가된 필드
+    private LocalDateTime usedDate;
+    private String couponImageUrl;
+    private String couponImageBase64;
+
     private LocalDate expireDate;
     private String barcode;
     private CouponDetails couponDetails;
@@ -18,5 +25,10 @@ public class PurchaseResponse {
         private String brandName;
         private String productName;
         private int pointsUsed;
+
+        // ✅ 쿠폰 사용용으로 추가된 필드
+        private String barcode;
+        private LocalDate expireDate;
+        private String usageInstructions;
     }
 }
