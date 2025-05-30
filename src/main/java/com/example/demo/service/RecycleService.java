@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.entity.User;
 import com.example.demo.dto.RecycleLogRequest;
 import com.example.demo.dto.RecycleLogResponse;
 import com.example.demo.entity.RecycleLog;
@@ -160,14 +161,18 @@ public class RecycleService {
             pointRepository.save(point);
 
             // 포인트 지급 내역 기록
+            User user = new User();
+            user.setId(userId);  // User ID만 설정 (연관관계 매핑용)
+
             PointHistory history = new PointHistory();
-            history.setUserId(userId);
+            history.setUser(user);  // setUser로 연결
             history.setDate(ZonedDateTime.now());
             history.setType("적립");
             history.setReason("AI 분석 리워드");
-            history.setWasteTypeKorean(category); // 분석 결과에서 온 항목
+            history.setWasteTypeKorean(category);
             history.setPoints(100);
             history.setBalance(point.getPoints());
+
             pointHistoryRepository.save(history);
 
             // 콘솔 로그
