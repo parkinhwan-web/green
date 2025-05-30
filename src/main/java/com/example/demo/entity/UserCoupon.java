@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
 @Entity
@@ -36,5 +37,11 @@ public class UserCoupon {
     private String barcode;
 
     @Column(nullable = false)
-    private ZonedDateTime purchasedAt;  // LocalDateTime → ZonedDateTime으로 일관성 유지
+    private ZonedDateTime purchasedAt; 
+    
+    @Column(nullable = false)
+    private boolean used = false;
+
+    private LocalDateTime usedDate;
+
 }

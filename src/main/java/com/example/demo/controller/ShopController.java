@@ -38,4 +38,20 @@ public class ShopController {
         PurchaseResponse response = couponService.purchaseCoupon(userDetails.getUser().getId(), couponId);
         return ResponseEntity.ok(response);
     }
+
+    /** 쿠폰 사용 */
+    @PostMapping("/users/{userId}/coupons/{couponId}/use")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> useCoupon(
+            @PathVariable Long userId,
+            @PathVariable Long couponId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        if (!userDetails.getUser().getId().equals(userId)) {
+            return ResponseEntity.status(403).body("권한이 없습니다.");
+        }
+
+        PurchaseResponse response = couponService.useCoupon(userId, couponId);
+        return ResponseEntity.ok(response);
+    }
 }
