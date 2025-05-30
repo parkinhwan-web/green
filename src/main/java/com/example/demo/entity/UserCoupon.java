@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
 @Entity
@@ -20,12 +19,10 @@ public class UserCoupon {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 사용자 연관관계
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id")
     private User user;
 
-    // 쿠폰 연관관계
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "coupon_id")
     private Coupon coupon;
@@ -37,11 +34,11 @@ public class UserCoupon {
     private String barcode;
 
     @Column(nullable = false)
-    private ZonedDateTime purchasedAt; 
-    
+    private ZonedDateTime purchasedAt;
+
     @Column(nullable = false)
     private boolean used = false;
 
-    private LocalDateTime usedDate;
-
+    // ✅ ZonedDateTime으로 수정
+    private ZonedDateTime usedDate;
 }

@@ -96,7 +96,8 @@ public class CouponService {
         }
 
         userCoupon.setUsed(true);
-        userCoupon.setUsedDate(ZonedDateTime.now());
+        ZonedDateTime usedDate = ZonedDateTime.now();
+        userCoupon.setUsedDate(usedDate);
         userCouponRepository.save(userCoupon);
 
         Coupon coupon = userCoupon.getCoupon();
@@ -113,7 +114,8 @@ public class CouponService {
         PurchaseResponse response = new PurchaseResponse();
         response.setSuccess(true);
         response.setMessage("쿠폰이 성공적으로 발급되었습니다.");
-        response.setUsedDate(userCoupon.getUsedDate()); // ✅ ZonedDateTime 그대로 사용
+        response.setUsedDate(userCoupon.getUsedDate()); // ✅ toLocalDateTime() 제거
+
         response.setCouponImageUrl(imageUrl);
         response.setCouponImageBase64(base64Image);
         response.setCouponDetails(details);
@@ -130,4 +132,3 @@ public class CouponService {
         }
     }
 }
-
