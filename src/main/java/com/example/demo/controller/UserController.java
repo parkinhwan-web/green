@@ -3,17 +3,20 @@ package com.example.demo.controller;
 import com.example.demo.dto.*;
 import com.example.demo.entity.Point;
 import com.example.demo.entity.User;
+import com.example.demo.security.CustomUserDetails;
 import com.example.demo.service.JwtService;
+import com.example.demo.service.PointHistoryService;
 import com.example.demo.service.RecycleService;
 import com.example.demo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -26,10 +29,9 @@ public class UserController {
     private final UserService userService;
     private final JwtService jwtService;
     private final RecycleService recycleService; // ✅ 포인트 조회를 위해 추가
+    private final PointHistoryService pointHistoryService; // ✅ 포인트 내역 조회용 서비스 추가
 
-    /**
-     * ✅ 회원가입 API
-     */
+    /** 회원가입 API */
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody UserSignupRequest request) {
         try {
@@ -41,9 +43,7 @@ public class UserController {
         }
     }
 
-    /**
-     * ✅ 로그인 API (JWT 발급)
-     */
+    /** 로그인 API (JWT 발급) */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserLoginRequest request) {
         try {
@@ -65,9 +65,7 @@ public class UserController {
         }
     }
 
-    /**
-     * ✅ 로그아웃 API
-     */
+    /** 로그아웃 API */
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String token) {
         if (token == null || !token.startsWith("Bearer ")) {
@@ -85,9 +83,7 @@ public class UserController {
         return ResponseEntity.ok().body("{\"message\": \"로그아웃 성공!\"}");
     }
 
-    /**
-     * ✅ 사용자 정보 조회 API
-     */
+    /** 사용자 정보 조회 API */
     @GetMapping("/{user_id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getUserById(@PathVariable Long user_id) {
@@ -101,9 +97,7 @@ public class UserController {
         return ResponseEntity.ok(user.get());
     }
 
-    /**
-     * ✅ 사용자 정보 수정 API
-     */
+    /** 사용자 정보 수정 API */
     @PutMapping("/{user_id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> updateUser(@PathVariable Long user_id, @RequestBody UserUpdateRequest request) {
@@ -119,9 +113,7 @@ public class UserController {
         }
     }
 
-    /**
-     * ✅ 계정 삭제 API
-     */
+    /** 계정 삭제 API */
     @DeleteMapping("/{user_id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> deleteUser(@PathVariable("user_id") Long userId) {
@@ -134,9 +126,7 @@ public class UserController {
         }
     }
 
-    /**
-     * ✅ 프로필 조회 API
-     */
+    /** 프로필 조회 API */
     @GetMapping("/profile")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getProfile(@RequestHeader("Authorization") String authHeader) {
@@ -162,9 +152,8 @@ public class UserController {
 
         return ResponseEntity.ok(response);
     }
-    /**
-     * ✅ 포인트 조회 API
-     */
+
+    /** 포인트 조회 API */
     @GetMapping("/{user_id}/points")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getUserPoints(@PathVariable("user_id") Long userId) {
@@ -181,6 +170,7 @@ public class UserController {
         }
     }
 
+    /** 포인트 사용 API */
     @PostMapping("/{user_id}/points/use")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> usePoints(
@@ -195,13 +185,14 @@ public class UserController {
         }
     }
 
+    /** 앱 설정 조회 API */
     @GetMapping("/settings")
     @PreAuthorize("isAuthenticated()")
-        public ResponseEntity<?> getAppSettings(@RequestHeader("Authorization") String authHeader) {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("message", "JWT 토큰이 필요합니다."));
-            }
+    public ResponseEntity<?> getAppSettings(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "JWT 토큰이 필요합니다."));
+        }
 
         String token = authHeader.substring(7);
         String email = jwtService.extractEmail(token);
@@ -216,5 +207,18 @@ public class UserController {
         }
     }
 
+    /** 포인트 내역 조회 API */
+    @GetMapping("/{userId}/points/history")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<PointHistoryResponse>> getPointHistory(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
+        if (!userDetails.getUser().getId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        List<PointHistoryResponse> history = pointHistoryService.getHistory(userId);
+        return ResponseEntity.ok(history);
+    }
 }
