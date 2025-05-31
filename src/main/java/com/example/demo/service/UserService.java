@@ -7,8 +7,7 @@ import com.example.demo.entity.User;
 import com.example.demo.repository.AppSettingsRepository;
 import com.example.demo.repository.PointRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.util.JwtUtil;
-import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsConstructor; // ✅ 오타 수정 완료
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,14 +20,11 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final PointRepository pointRepository;
     private final AppSettingsRepository appSettingsRepository;
 
-    /**
-     * ✅ 회원가입
-     */
     @Transactional
     public UserSignupResponse signup(UserSignupRequest request) {
         if (request.getEmail() == null || request.getUsername() == null || request.getPassword() == null) {
@@ -55,9 +51,6 @@ public class UserService {
                 .build();
     }
 
-    /**
-     * ✅ 로그인 (JWT 발급)
-     */
     @Transactional(readOnly = true)
     public UserLoginResponse login(UserLoginRequest request) {
         Optional<User> optionalUser = userRepository.findByEmail(request.getEmail());
@@ -68,13 +61,12 @@ public class UserService {
 
         User user = optionalUser.get();
 
-        // ✅ 디버깅 로그 추가
         System.out.println("🔍 로그인 사용자 정보 확인");
         System.out.println("   ID: " + user.getId());
         System.out.println("   Username: " + user.getUsername());
         System.out.println("   Email: " + user.getEmail());
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getUsername());
+        String token = jwtService.generateToken(user.getEmail(), "USER", user.getId(), user.getUsername());
 
         return UserLoginResponse.builder()
                 .message("로그인 성공!")
@@ -86,17 +78,11 @@ public class UserService {
                 .build();
     }
 
-    /**
-     * ✅ 사용자 정보 조회 (user_id로)
-     */
     @Transactional(readOnly = true)
     public Optional<User> getUserById(Long userId) {
         return userRepository.findById(userId);
     }
 
-    /**
-     * ✅ 사용자 정보 수정
-     */
     @Transactional
     public UserUpdateResponse updateUser(Long userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId)
@@ -115,9 +101,6 @@ public class UserService {
         return new UserUpdateResponse("사용자 정보 수정 성공!");
     }
 
-    /**
-     * ✅ 사용자 삭제
-     */
     @Transactional
     public void deleteUser(Long userId) {
         if (!userRepository.existsById(userId)) {
@@ -127,17 +110,11 @@ public class UserService {
         userRepository.deleteById(userId);
     }
 
-    /**
-     * ✅ 사용자 프로필 조회 (이메일 기반, JWT에서 추출)
-     */
     @Transactional(readOnly = true)
     public Optional<User> getProfile(String email) {
         return userRepository.findByEmail(email);
     }
 
-    /**
-     * ✅ 포인트 사용
-     */
     public PointUsageResponse usePoints(Long userId, PointUsageRequest request) {
         Point point = pointRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("포인트 정보가 없습니다."));
@@ -156,18 +133,12 @@ public class UserService {
                 .build();
     }
 
-    /**
-     * ✅ 이메일로 사용자 ID 반환
-     */
     public Long getUserIdByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("해당 이메일의 사용자를 찾을 수 없습니다."))
                 .getId();
     }
 
-    /**
-     * ✅ 앱 설정 정보 조회
-     */
     public AppSettingsResponse getAppSettings(Long userId) {
         AppSettings settings = appSettingsRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("앱 설정 정보가 없습니다."));

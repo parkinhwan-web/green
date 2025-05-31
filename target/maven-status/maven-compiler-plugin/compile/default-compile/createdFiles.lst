@@ -16,7 +16,6 @@ com\example\demo\dto\PurchaseRequest.class
 com\example\demo\dto\RecycleLogResponse$RecycleLogResponseBuilder.class
 com\example\demo\controller\ShopController.class
 com\example\demo\entity\UserCoupon.class
-com\example\demo\util\JwtUtil.class
 com\example\demo\dto\UserLoginResponse$UserLoginResponseBuilder.class
 com\example\demo\repository\PointHistoryRepository.class
 com\example\demo\controller\HelloController.class
