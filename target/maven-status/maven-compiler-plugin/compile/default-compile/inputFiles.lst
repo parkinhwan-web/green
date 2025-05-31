@@ -1,8 +1,12 @@
 C:\trashformer\green\src\main\java\com\example\demo\entity\Coupon.java
+C:\trashformer\green\src\main\java\com\example\demo\dto\LeaderboardResponse.java
 C:\trashformer\green\src\main\java\com\example\demo\dto\UserCouponResponseDto.java
+C:\trashformer\green\src\main\java\com\example\demo\service\RankingService.java
+C:\trashformer\green\src\main\java\com\example\demo\dto\UserRankingDto.java
 C:\trashformer\green\src\main\java\com\example\demo\service\UserService.java
 C:\trashformer\green\src\main\java\com\example\demo\controller\HelloController.java
 C:\trashformer\green\src\main\java\com\example\demo\util\JwtUtil.java
+C:\trashformer\green\src\main\java\com\example\demo\controller\RankingController.java
 C:\trashformer\green\src\main\java\com\example\demo\repository\RecycleAnalysisResultRepository.java
 C:\trashformer\green\src\main\java\com\example\demo\service\CouponService.java
 C:\trashformer\green\src\main\java\com\example\demo\dto\RecycleLogRequest.java
