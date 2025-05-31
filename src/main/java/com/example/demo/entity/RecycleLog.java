@@ -15,7 +15,11 @@ public class RecycleLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;
+    // ✅ User 엔티티와 연관관계 설정
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     private Long analysisId;
     private String disposalCategory;
     private String disposalMethod;
