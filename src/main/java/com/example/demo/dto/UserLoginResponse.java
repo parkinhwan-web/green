@@ -1,12 +1,14 @@
 package com.example.demo.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor   // ✅ builder 사용 시 필수
+@Builder              // ✅ builder 패턴 적용
 public class UserLoginResponse {
 
     private String message;
@@ -15,16 +17,4 @@ public class UserLoginResponse {
     private Long userId;
     private String token;
     private int expiresIn;
-
-    @Builder
-    public UserLoginResponse(String message, String email, String username,
-                             Long userId, String token, int expiresIn) {
-        this.message = message;
-        this.email = email;
-        this.username = username;
-        this.userId = userId;
-        this.token = token;
-        this.expiresIn = expiresIn;
-    }
 }
-
