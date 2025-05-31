@@ -1,6 +1,5 @@
 package com.example.demo.service;
 
-
 import com.example.demo.entity.AppSettings;
 import com.example.demo.entity.Point;
 import com.example.demo.dto.*;
@@ -50,8 +49,8 @@ public class UserService {
         return UserSignupResponse.builder()
                 .message("회원가입 성공!")
                 .userId(savedUser.getId())
-                .username(savedUser.getUsername()) 
-                .email(savedUser.getEmail())  
+                .username(savedUser.getUsername())
+                .email(savedUser.getEmail())
                 .createdAt(ZonedDateTime.now().toString())
                 .build();
     }
@@ -68,13 +67,13 @@ public class UserService {
         }
 
         User user = optionalUser.get();
-        String token = jwtUtil.generateToken(user.getEmail());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getUsername());  // ✅ 수정된 부분
 
         return UserLoginResponse.builder()
                 .message("로그인 성공!")
-                .email(user.getEmail())        // ✅ User 엔티티에서 가져온 값
-                .username(user.getUsername())         // ✅ UserDetails 구현체에서 가져온 값
-                .userId(user.getId()) 
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .userId(user.getId())
                 .token(token)
                 .expiresIn(3600)
                 .build();
@@ -132,32 +131,31 @@ public class UserService {
     public PointUsageResponse usePoints(Long userId, PointUsageRequest request) {
         Point point = pointRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("포인트 정보가 없습니다."));
-    
+
         if (request.getPointsToUse() > point.getPoints()) {
             throw new IllegalArgumentException("포인트가 부족합니다.");
         }
-    
+
         point.setPoints(point.getPoints() - request.getPointsToUse());
         pointRepository.save(point);
-    
+
         return PointUsageResponse.builder()
                 .message("포인트 사용 성공!")
                 .remainingPoints(point.getPoints())
                 .updatedAt(point.getUpdatedAt().toString())
                 .build();
     }
-    
+
     public Long getUserIdByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("해당 이메일의 사용자를 찾을 수 없습니다."))
                 .getId();
     }
-    
-    
+
     public AppSettingsResponse getAppSettings(Long userId) {
         AppSettings settings = appSettingsRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("앱 설정 정보가 없습니다."));
-    
+
         return AppSettingsResponse.builder()
                 .theme(settings.getTheme())
                 .notifications(settings.isNotifications())
