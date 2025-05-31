@@ -27,7 +27,7 @@ public class UserController {
     private final JwtService jwtService;
     private final RecycleService recycleService;
     private final PointHistoryService pointHistoryService;
-    private final UserCouponService userCouponService; // ✅ 추가
+    private final UserCouponService userCouponService;
 
     /** 회원가입 API */
     @PostMapping("/signup")
@@ -41,22 +41,12 @@ public class UserController {
         }
     }
 
-    /** 로그인 API (JWT 발급) */
+    /** ✅ 수정된 로그인 API (UserService 반환값 그대로 사용) */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserLoginRequest request) {
         try {
             UserLoginResponse response = userService.login(request);
-            String role = "ROLE_USER";
-            String token = jwtService.generateToken(response.getEmail(), role);
-
-            UserLoginResponse loginResponse = UserLoginResponse.builder()
-                    .message("로그인 성공!")
-                    .email(response.getEmail())
-                    .token(token)
-                    .expiresIn(3600)
-                    .build();
-
-            return ResponseEntity.ok(loginResponse);
+            return ResponseEntity.ok(response); // ✅ 그대로 반환
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("{\"error\": \"" + e.getMessage() + "\"}");
@@ -86,12 +76,10 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getUserById(@PathVariable Long user_id) {
         Optional<User> user = userService.getUserById(user_id);
-
         if (user.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("{\"message\": \"사용자를 찾을 수 없습니다.\"}");
         }
-
         return ResponseEntity.ok(user.get());
     }
 
@@ -211,26 +199,22 @@ public class UserController {
     public ResponseEntity<List<PointHistoryResponse>> getPointHistory(
             @PathVariable Long userId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-
         if (!userDetails.getUser().getId().equals(userId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
         List<PointHistoryResponse> history = pointHistoryService.getHistory(userId);
         return ResponseEntity.ok(history);
     }
 
-    /** ✅ 쿠폰함 조회 API */
+    /** 쿠폰함 조회 API */
     @GetMapping("/{userId}/coupons")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserCouponBoxResponse> getUserCoupons(
             @PathVariable Long userId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-
         if (!userDetails.getUser().getId().equals(userId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
         UserCouponBoxResponse response = userCouponService.getUserCoupons(userId);
         return ResponseEntity.ok(response);
     }
