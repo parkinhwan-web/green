@@ -1,4 +1,5 @@
 com\example\demo\repository\UserCouponRepository.class
+com\example\demo\service\UserCouponService.class
 com\example\demo\service\JwtService.class
 com\example\demo\service\UserService.class
 com\example\demo\security\CustomUserDetails.class
@@ -26,6 +27,7 @@ com\example\demo\dto\PurchaseResponse$CouponDetails.class
 com\example\demo\dto\UserLoginRequest.class
 com\example\demo\service\PointHistoryService.class
 com\example\demo\config\JwtConfig.class
+com\example\demo\dto\UserCouponBoxResponse.class
 com\example\demo\service\UserDetailsServiceImpl.class
 com\example\demo\dto\UserSignupResponse$UserSignupResponseBuilder.class
 com\example\demo\config\SecurityConfig.class
@@ -35,6 +37,7 @@ com\example\demo\dto\AppSettingsResponse$AppSettingsResponseBuilder.class
 com\example\demo\dto\AppSettingsResponse.class
 com\example\demo\entity\AppSettings.class
 com\example\demo\dto\UserProfileResponse.class
+com\example\demo\dto\UserCouponResponseDto.class
 com\example\demo\repository\RecycleAnalysisResultRepository.class
 com\example\demo\DemoApplication.class
 com\example\demo\entity\User.class

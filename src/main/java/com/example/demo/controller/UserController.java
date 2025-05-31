@@ -4,10 +4,7 @@ import com.example.demo.dto.*;
 import com.example.demo.entity.Point;
 import com.example.demo.entity.User;
 import com.example.demo.security.CustomUserDetails;
-import com.example.demo.service.JwtService;
-import com.example.demo.service.PointHistoryService;
-import com.example.demo.service.RecycleService;
-import com.example.demo.service.UserService;
+import com.example.demo.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +25,9 @@ public class UserController {
 
     private final UserService userService;
     private final JwtService jwtService;
-    private final RecycleService recycleService; // ✅ 포인트 조회를 위해 추가
-    private final PointHistoryService pointHistoryService; // ✅ 포인트 내역 조회용 서비스 추가
+    private final RecycleService recycleService;
+    private final PointHistoryService pointHistoryService;
+    private final UserCouponService userCouponService; // ✅ 추가
 
     /** 회원가입 API */
     @PostMapping("/signup")
@@ -196,7 +194,7 @@ public class UserController {
 
         String token = authHeader.substring(7);
         String email = jwtService.extractEmail(token);
-        Long userId = userService.getUserIdByEmail(email); // 🔍 이메일로 userId 조회 메서드 필요
+        Long userId = userService.getUserIdByEmail(email);
 
         try {
             AppSettingsResponse response = userService.getAppSettings(userId);
@@ -220,5 +218,20 @@ public class UserController {
 
         List<PointHistoryResponse> history = pointHistoryService.getHistory(userId);
         return ResponseEntity.ok(history);
+    }
+
+    /** ✅ 쿠폰함 조회 API */
+    @GetMapping("/{userId}/coupons")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserCouponBoxResponse> getUserCoupons(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        if (!userDetails.getUser().getId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        UserCouponBoxResponse response = userCouponService.getUserCoupons(userId);
+        return ResponseEntity.ok(response);
     }
 }
