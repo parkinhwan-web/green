@@ -1,8 +1,8 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.*;
 import com.example.demo.entity.AppSettings;
 import com.example.demo.entity.Point;
-import com.example.demo.dto.*;
 import com.example.demo.entity.User;
 import com.example.demo.repository.AppSettingsRepository;
 import com.example.demo.repository.PointRepository;
@@ -40,9 +40,9 @@ public class UserService {
         }
 
         User user = new User();
-        user.setUsername(request.getUsername()); // 사용자명
-        user.setEmail(request.getEmail());       // 로그인용 이메일
-        user.setPassword(passwordEncoder.encode(request.getPassword())); // 비밀번호 암호화
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         User savedUser = userRepository.save(user);
 
@@ -67,7 +67,7 @@ public class UserService {
         }
 
         User user = optionalUser.get();
-        String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getUsername());  // ✅ 수정된 부분
+        String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getUsername());
 
         return UserLoginResponse.builder()
                 .message("로그인 성공!")
@@ -128,6 +128,9 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    /**
+     * ✅ 포인트 사용
+     */
     public PointUsageResponse usePoints(Long userId, PointUsageRequest request) {
         Point point = pointRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("포인트 정보가 없습니다."));
@@ -146,12 +149,18 @@ public class UserService {
                 .build();
     }
 
+    /**
+     * ✅ 이메일로 사용자 ID 반환
+     */
     public Long getUserIdByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("해당 이메일의 사용자를 찾을 수 없습니다."))
                 .getId();
     }
 
+    /**
+     * ✅ 앱 설정 정보 조회
+     */
     public AppSettingsResponse getAppSettings(Long userId) {
         AppSettings settings = appSettingsRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("앱 설정 정보가 없습니다."));

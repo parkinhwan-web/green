@@ -1,14 +1,14 @@
 package com.example.demo.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor   // ✅ builder 사용 시 필수
-@Builder              // ✅ builder 패턴 적용
+@AllArgsConstructor
+@Builder
 public class UserLoginResponse {
 
     private String message;
