@@ -7,15 +7,16 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.util.Base64;
 import java.util.Date;
 
 @Component
 public class JwtUtil {
 
-    // ✅ 강력한 SecretKey를 자동 생성
-    private static final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    // ✅ 고정된 SecretKey 문자열 (32바이트 이상 Base64 인코딩 권장)
+    private static final String SECRET = "my-super-secure-and-long-secret-key-1234567890";
+    private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(SECRET.getBytes());
 
-    // ✅ SecretKey 반환
     private SecretKey getSigningKey() {
         return SECRET_KEY;
     }
