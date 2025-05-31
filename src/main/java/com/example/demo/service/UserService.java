@@ -67,6 +67,13 @@ public class UserService {
         }
 
         User user = optionalUser.get();
+
+        // ✅ 디버깅 로그 추가
+        System.out.println("🔍 로그인 사용자 정보 확인");
+        System.out.println("   ID: " + user.getId());
+        System.out.println("   Username: " + user.getUsername());
+        System.out.println("   Email: " + user.getEmail());
+
         String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getUsername());
 
         return UserLoginResponse.builder()
