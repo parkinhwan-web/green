@@ -6,6 +6,8 @@ import com.example.demo.entity.UserCoupon;
 import com.example.demo.repository.UserCouponRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -19,6 +21,7 @@ public class UserCouponService {
 
     private final UserCouponRepository userCouponRepository;
 
+    @Transactional(readOnly = true)
     public UserCouponBoxResponse getUserCoupons(Long userId) {
         // ✅ 미사용 쿠폰
         List<UserCoupon> unused = userCouponRepository.findByUserIdAndUsedFalse(userId);
