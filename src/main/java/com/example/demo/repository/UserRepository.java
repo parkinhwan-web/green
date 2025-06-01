@@ -1,6 +1,6 @@
 package com.example.demo.repository;
 
-import java.util.Optional;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -10,14 +10,15 @@ import com.example.demo.entity.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    // ✅ 이메일로 사용자 찾기 (대소문자 무시)
+    // ✅ 이메일로 사용자 리스트 조회 (대소문자 무시, 중복 대응)
     @Query("SELECT u FROM User u WHERE LOWER(u.email) = LOWER(:email)")
-    Optional<User> findByEmail(@Param("email") String email);
+    List<User> findByEmail(@Param("email") String email);
 
-    // ✅ 이메일 중복 확인
+    // ✅ 이메일 중복 여부 확인
     boolean existsByEmail(String email);
 
-    // ✅ 사용자 ID로 상세 정보 조회 (fetch join 활용 가능)
+    // ✅ 사용자 ID로 상세 정보 조회 (추후 fetch join으로 확장 가능)
     @Query("SELECT u FROM User u WHERE u.id = :userId")
-    Optional<User> findByIdWithDetails(@Param("userId") Long userId);
+    java.util.Optional<User> findByIdWithDetails(@Param("userId") Long userId);
 }
+
