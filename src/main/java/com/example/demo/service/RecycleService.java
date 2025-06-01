@@ -44,18 +44,15 @@ public class RecycleService {
     private final RecycleAnalysisResultRepository recycleAnalysisResultRepository;
     private final PointRepository pointRepository;
     private final PointHistoryRepository pointHistoryRepository;
-    private final UserRepository userRepository; // ✅ 추가됨
+    private final UserRepository userRepository;
 
-    /**
-     * ✅ 분리수거 기록 저장
-     */
     @Transactional
     public RecycleLogResponse saveLog(RecycleLogRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         RecycleLog log = new RecycleLog();
-        log.setUser(user); // ✅ userId 대신 연관관계로 설정
+        log.setUser(user);
         log.setAnalysisId(request.getAnalysisId());
         log.setDisposalCategory(request.getDisposalCategory());
         log.setDisposalMethod(request.getDisposalMethod());
@@ -69,18 +66,15 @@ public class RecycleService {
                 .build();
     }
 
-    /**
-     * ✅ 분석 결과 조회
-     */
     @Transactional(readOnly = true)
     public RecycleAnalysisResult getResultByAnalysisId(Long analysisId) {
-        return recycleAnalysisResultRepository.findByAnalysisId(analysisId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 분석 결과가 없습니다."));
+        List<RecycleAnalysisResult> results = recycleAnalysisResultRepository.findByAnalysisId(analysisId);
+        if (results.isEmpty()) {
+            throw new IllegalArgumentException("해당 분석 결과가 없습니다.");
+        }
+        return results.get(0); // 필요시 여러 건 중 원하는 조건으로 선택 가능
     }
 
-    /**
-     * ✅ 분석 결과 저장 (테스트용)
-     */
     @Transactional
     public void saveAnalysisResult(RecycleAnalysisResult result) {
         recycleAnalysisResultRepository.save(result);
@@ -98,9 +92,6 @@ public class RecycleService {
     @Value("${script.weight}")
     private String weightPath;
 
-    /**
-     * ✅ 이미지 분석 및 결과 저장 + 포인트 지급 + 내역 기록
-     */
     @Transactional
     public void analyzeAndSave(MultipartFile image, long analysisId, Long userId) {
         try {
@@ -120,7 +111,7 @@ public class RecycleService {
             }
 
             String pythonOutput = runPythonScript(target.toString());
-            log.warn("🔍 PY FULL OUTPUT\n{}", pythonOutput);
+            log.warn("\uD83D\uDD0D PY FULL OUTPUT\n{}", pythonOutput);
 
             String category;
             double confidence;
@@ -170,7 +161,7 @@ public class RecycleService {
 
             pointHistoryRepository.save(history);
 
-            System.out.println("🎉 [포인트 지급] userId=" + userId + ", 현재 포인트=" + point.getPoints());
+            System.out.println("\uD83C\uDF89 [포인트 지급] userId=" + userId + ", 현재 포인트=" + point.getPoints());
         } catch (IOException e) {
             log.error("이미지 처리 중 IOException 발생: {}", e.getMessage(), e);
             throw new RuntimeException("이미지 처리 중 오류 발생", e);
@@ -204,9 +195,6 @@ public class RecycleService {
         }
     }
 
-    /**
-     * ✅ 포인트 조회
-     */
     public Point getUserPointInfo(Long userId) {
         return pointRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("포인트 정보가 없습니다."));
