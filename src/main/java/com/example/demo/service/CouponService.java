@@ -90,12 +90,10 @@ public class CouponService {
     public PurchaseResponse useCoupon(User user, Long couponId) {
         Long userId = user.getId();
 
-        UserCoupon userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 쿠폰을 찾을 수 없습니다."));
-
-        if (userCoupon.isUsed()) {
-            throw new IllegalStateException("이미 사용된 쿠폰입니다.");
-        }
+        // ✅ 중복 문제 해결: 사용되지 않은 쿠폰 중 하나만 안전하게 조회
+        UserCoupon userCoupon = userCouponRepository
+                .findFirstByUserIdAndCouponIdAndUsedFalse(userId, couponId)
+                .orElseThrow(() -> new IllegalArgumentException("사용 가능한 쿠폰이 없습니다."));
 
         userCoupon.setUsed(true);
         ZonedDateTime usedDate = ZonedDateTime.now();

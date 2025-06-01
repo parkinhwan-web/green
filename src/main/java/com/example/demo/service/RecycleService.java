@@ -143,7 +143,7 @@ public class RecycleService {
                         return p;
                     });
 
-            point.setPoints(point.getPoints() + 100);
+            point.setPoints(point.getPoints() + 1000);
             point.setUpdatedAt(ZonedDateTime.now());
             pointRepository.save(point);
 
@@ -156,7 +156,7 @@ public class RecycleService {
             history.setType("적립");
             history.setReason("AI 분석 리워드");
             history.setWasteTypeKorean(category);
-            history.setPoints(100);
+            history.setPoints(1000);
             history.setBalance(point.getPoints());
 
             pointHistoryRepository.save(history);
