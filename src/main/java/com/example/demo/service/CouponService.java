@@ -87,7 +87,9 @@ public class CouponService {
 
     /** 쿠폰 사용 */
     @Transactional
-    public PurchaseResponse useCoupon(Long userId, Long couponId) {
+    public PurchaseResponse useCoupon(User user, Long couponId) {
+        Long userId = user.getId();
+
         UserCoupon userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 쿠폰을 찾을 수 없습니다."));
 
