@@ -24,13 +24,17 @@ public class User implements UserDetails {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String username; // 사용자 이름 (로그인 시 사용할 식별자)
+    private String username;
 
     @Column(unique = true, nullable = false)
-    private String email;    // 이메일 (별도 정보로 사용)
+    private String email;
 
     @Column(nullable = false)
     private String password;
+
+    // ✅ 분리수거 로그 연관관계 추가
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RecycleLog> recycleLogs;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -42,7 +46,6 @@ public class User implements UserDetails {
         return password;
     }
 
-    // ✅ 이제 진짜 username 반환 (Spring Security가 여기 기준으로 로그인)
     @Override
     public String getUsername() {
         return username;
@@ -68,7 +71,6 @@ public class User implements UserDetails {
         return true;
     }
 
-    // ✅ 추가된 getter 메서드들 (명확한 호출을 위해 직접 정의)
     public Long getUserId() {
         return this.id;
     }

@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import java.util.Map;
+import java.util.HashMap;
 
 import java.time.ZonedDateTime;
 import java.util.UUID;
@@ -59,14 +61,64 @@ public class RecycleService {
 
         RecycleLog saved = recycleLogRepository.save(log);
 
+        int pointsEarned = 50;
+
+        Point point = pointRepository.findByUserId(userId)
+                .orElseGet(() -> {
+                    Point p = new Point();
+                    p.setUserId(userId);
+                    p.setPoints(0);
+                    return p;
+                });
+        point.setPoints(point.getPoints() + pointsEarned);
+        point.setUpdatedAt(ZonedDateTime.now());
+        pointRepository.save(point);
+
+        PointHistory history = new PointHistory();
+        history.setUser(user);
+        history.setDate(ZonedDateTime.now());
+        history.setType("적립");
+        history.setReason(request.getDisposalCategory() + " 분리수거");
+        history.setWasteTypeKorean(request.getDisposalCategory());
+        history.setPoints(pointsEarned);
+        history.setBalance(point.getPoints());
+        pointHistoryRepository.save(history);
+
+        long recycleCount = recycleLogRepository.countByUserId(userId);
+
+        int previousRank = getUserRank(userId);
+        // 순위 갱신 후 새 순위
+        int currentRank = getUserRank(userId);
+        boolean rankImproved = currentRank < previousRank;
+
         return RecycleLogResponse.builder()
-                .message("분리수거 기록이 기록되었습니다.")
-                .count(saved.getId())
-                .createdAt(saved.getCreatedAt().toString())
-                .build();
+            .success(true)
+            .logId(saved.getId())
+            .pointsEarned(pointsEarned)
+            .totalPoints(point.getPoints())
+            .recycleCount(recycleCount)
+            .message(request.getDisposalCategory() + " 분리수거가 기록되었습니다.")
+            .wasteTypeKorean(request.getDisposalCategory())
+            .rankChange(Map.of(
+                "previous_rank", previousRank,
+                "current_rank", currentRank,
+                "rank_improved", previousRank > currentRank
+            ))
+            .build();
+
     }
 
-    // ✅ 단건 조회 (본인 것만)
+    public int getUserRank(Long userId) {
+        List<Object[]> allRanks = recycleLogRepository.countRecycleLogsByUser();
+        allRanks.sort((a, b) -> Long.compare((Long) b[1], (Long) a[1]));
+
+        for (int i = 0; i < allRanks.size(); i++) {
+            Long uid = (Long) allRanks.get(i)[0];
+            if (uid.equals(userId)) return i + 1;
+        }
+        return -1;
+    }
+
     @Transactional(readOnly = true)
     public RecycleLog getLogById(Long logId, Long userId) {
         Optional<RecycleLog> optionalLog = recycleLogRepository.findById(logId);
@@ -82,10 +134,9 @@ public class RecycleService {
         return log;
     }
 
-    // ✅ 삭제 기능 추가 (본인 것만)
     @Transactional
     public void deleteLogById(Long logId, Long userId) {
-        RecycleLog log = getLogById(logId, userId); // 권한 검사 포함됨
+        RecycleLog log = getLogById(logId, userId);
         recycleLogRepository.delete(log);
     }
 
@@ -221,5 +272,9 @@ public class RecycleService {
     public Point getUserPointInfo(Long userId) {
         return pointRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("포인트 정보가 없습니다."));
+    }
+
+    public long getRecycleCountByUser(Long userId) {
+        return recycleLogRepository.countByUserId(userId);
     }
 }

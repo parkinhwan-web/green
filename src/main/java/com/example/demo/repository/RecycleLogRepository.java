@@ -21,4 +21,7 @@ public interface RecycleLogRepository extends JpaRepository<RecycleLog, Long> {
     // ✅ 전체 분리수거 횟수
     @Query("SELECT COUNT(r) FROM RecycleLog r")
     Long countTotalRecycles();
+
+    // ✅ 단일 사용자 분리수거 횟수 (추가 필요)
+    long countByUserId(Long userId);
 }

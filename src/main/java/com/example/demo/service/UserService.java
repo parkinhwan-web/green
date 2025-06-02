@@ -8,6 +8,7 @@ import com.example.demo.repository.AppSettingsRepository;
 import com.example.demo.repository.PointRepository;
 import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -61,11 +63,6 @@ public class UserService {
         }
 
         User user = users.get(0);
-
-        System.out.println("🔍 로그인 사용자 정보 확인");
-        System.out.println("   ID: " + user.getId());
-        System.out.println("   Username: " + user.getUsername());
-        System.out.println("   Email: " + user.getEmail());
 
         String token = jwtService.generateToken(user.getEmail(), "USER", user.getId(), user.getUsername());
 
@@ -115,6 +112,38 @@ public class UserService {
     public Optional<User> getProfile(String email) {
         List<User> users = userRepository.findByEmail(email);
         return users.isEmpty() ? Optional.empty() : Optional.of(users.get(0));
+    }
+
+    @Transactional(readOnly = true)
+    public UserProfileResponse getProfileResponse(String email) {
+        User user = userRepository.findByEmail(email)
+                .stream().findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        int point = pointRepository.findByUserId(user.getId())
+                .map(Point::getPoints)
+                .orElse(0);
+
+        int recycleCount = user.getRecycleLogs() != null
+                ? user.getRecycleLogs().size()
+                : 0;
+
+        List<String> roles = user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        return UserProfileResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .points(point)
+                .recycleCount(recycleCount)
+                .enabled(user.isEnabled())
+                .accountNonExpired(user.isAccountNonExpired())
+                .accountNonLocked(user.isAccountNonLocked())
+                .credentialsNonExpired(user.isCredentialsNonExpired())
+                .authorities(roles)
+                .build();
     }
 
     public PointUsageResponse usePoints(Long userId, PointUsageRequest request) {
