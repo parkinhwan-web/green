@@ -135,7 +135,7 @@ public class UserController {
         try {
             Point point = recycleService.getUserPointInfo(userId);
             Map<String, Object> response = new HashMap<>();
-            response.put("user_id", point.getUserId());
+            response.put("user_id", point.getUser().getId());
             response.put("points", point.getPoints());
             response.put("last_updated", point.getUpdatedAt().toString());
             return ResponseEntity.ok(response);
@@ -144,6 +144,7 @@ public class UserController {
                     .body(Map.of("message", e.getMessage()));
         }
     }
+
 
     @PostMapping("/{user_id}/points/use")
     @PreAuthorize("isAuthenticated()")

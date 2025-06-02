@@ -66,7 +66,7 @@ public class RecycleService {
         Point point = pointRepository.findByUserId(userId)
                 .orElseGet(() -> {
                     Point p = new Point();
-                    p.setUserId(userId);
+                    p.setUser(user);
                     p.setPoints(0);
                     return p;
                 });
@@ -87,9 +87,7 @@ public class RecycleService {
         long recycleCount = recycleLogRepository.countByUserId(userId);
 
         int previousRank = getUserRank(userId);
-        // 순위 갱신 후 새 순위
         int currentRank = getUserRank(userId);
-        boolean rankImproved = currentRank < previousRank;
 
         return RecycleLogResponse.builder()
             .success(true)
@@ -105,7 +103,6 @@ public class RecycleService {
                 "rank_improved", previousRank > currentRank
             ))
             .build();
-
     }
 
     public int getUserRank(Long userId) {
@@ -209,10 +206,13 @@ public class RecycleService {
             result.setCreatedAt(ZonedDateTime.now());
             recycleAnalysisResultRepository.save(result);
 
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
             Point point = pointRepository.findByUserId(userId)
                     .orElseGet(() -> {
                         Point p = new Point();
-                        p.setUserId(userId);
+                        p.setUser(user);
                         p.setPoints(0);
                         return p;
                     });
@@ -220,9 +220,6 @@ public class RecycleService {
             point.setPoints(point.getPoints() + 1000);
             point.setUpdatedAt(ZonedDateTime.now());
             pointRepository.save(point);
-
-            User user = new User();
-            user.setId(userId);
 
             PointHistory history = new PointHistory();
             history.setUser(user);

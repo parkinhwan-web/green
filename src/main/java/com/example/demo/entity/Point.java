@@ -17,17 +17,17 @@ public class Point {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false, unique = true)
-    private Long userId;
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private User user;
 
     @Column(name = "points", nullable = false)
     private int points;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    private ZonedDateTime updatedAt; // 마지막 업데이트 시간
+    private ZonedDateTime updatedAt;
 
-    // ✅ getAmount() 헷갈림 방지를 위한 별도 메서드 (선택적)
     public int getAmount() {
         return this.points;
     }

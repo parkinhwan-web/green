@@ -53,6 +53,12 @@ public class UserService {
         defaultSettings.setLanguage("ko");
         appSettingsRepository.save(defaultSettings);
 
+        // ✅ 포인트 초기값 저장
+        Point point = new Point();
+        point.setUser(savedUser);
+        point.setPoints(0);
+        pointRepository.save(point);
+
         return UserSignupResponse.builder()
                 .message("회원가입 성공!")
                 .userId(savedUser.getId())
@@ -172,7 +178,7 @@ public class UserService {
         return users.get(0).getId();
     }
 
-    @Transactional // 또는 @Transactional(readOnly = false)
+    @Transactional
     public AppSettingsResponse getAppSettings(Long userId) {
         AppSettings settings = appSettingsRepository.findByUserId(userId)
             .orElseGet(() -> {
@@ -181,7 +187,7 @@ public class UserService {
                 newSettings.setTheme("light");
                 newSettings.setNotifications(true);
                 newSettings.setLanguage("ko");
-                return appSettingsRepository.save(newSettings); // ✅ 정상 저장 가능
+                return appSettingsRepository.save(newSettings);
             });
 
         return AppSettingsResponse.builder()
@@ -190,7 +196,6 @@ public class UserService {
                 .language(settings.getLanguage())
                 .build();
     }
-
 
     @Transactional
     public AppSettingsUpdateResponse updateAppSettings(Long userId, AppSettingsUpdateRequest request) {
@@ -216,3 +221,4 @@ public class UserService {
         );
     }
 }
+

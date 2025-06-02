@@ -2,8 +2,10 @@ package com.example.demo;
 
 import com.example.demo.entity.Point;
 import com.example.demo.entity.RecycleAnalysisResult;
+import com.example.demo.entity.User;
 import com.example.demo.repository.PointRepository;
 import com.example.demo.repository.RecycleAnalysisResultRepository;
+import com.example.demo.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -36,7 +38,8 @@ public class DemoApplication {
     // ✅ 테스트용 분석 결과 + 포인트 자동 삽입
     @Bean
     public CommandLineRunner initTestData(RecycleAnalysisResultRepository resultRepo,
-                                          PointRepository pointRepo) {
+                                          PointRepository pointRepo,
+                                          UserRepository userRepo) {
         return args -> {
             // 분석 결과 삽입
             Long testAnalysisId = 456L;
@@ -55,13 +58,19 @@ public class DemoApplication {
             // 포인트 데이터 삽입
             Long testUserId = 123L;
             if (pointRepo.findByUserId(testUserId).isEmpty()) {
-                Point point = new Point();
-                point.setUserId(testUserId);
-                point.setPoints(150);
-                point.setUpdatedAt(ZonedDateTime.now());
+                // 테스트 사용자 조회
+                User user = userRepo.findById(testUserId).orElse(null);
+                if (user != null) {
+                    Point point = new Point();
+                    point.setUser(user); // ✅ 변경된 필드
+                    point.setPoints(150);
+                    point.setUpdatedAt(ZonedDateTime.now());
 
-                pointRepo.save(point);
-                System.out.println("✅ 테스트용 포인트 데이터 저장 완료 (user_id = 123)");
+                    pointRepo.save(point);
+                    System.out.println("✅ 테스트용 포인트 데이터 저장 완료 (user_id = 123)");
+                } else {
+                    System.out.println("⚠️ user_id=123 사용자가 존재하지 않아 포인트 생성 건너뜀");
+                }
             }
         };
     }
