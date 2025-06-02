@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.RecycleLogRequest;
 import com.example.demo.dto.RecycleLogResponse;
 import com.example.demo.entity.RecycleAnalysisResult;
+import com.example.demo.entity.RecycleLog;
 import com.example.demo.security.CustomUserDetails;
 import com.example.demo.service.RecycleService;
 import lombok.RequiredArgsConstructor;
@@ -55,16 +56,42 @@ public class RecycleController {
     }
 
     /**
-     * ✅ 분리수거 활동 기록 API
+     * ✅ 분리수거 활동 기록 API (인증 사용자 기반 userId 사용)
      */
     @PostMapping("/log")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> recordRecycleLog(@RequestBody RecycleLogRequest request) {
+    public ResponseEntity<?> recordRecycleLog(
+            @RequestBody RecycleLogRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
         try {
-            RecycleLogResponse response = recycleService.saveLog(request);
+            Long userId = userDetails.getUser().getId();
+            RecycleLogResponse response = recycleService.saveLog(request, userId);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    /**
+     * ✅ 분리수거 로그 단건 조회 API (본인 로그만 조회 가능)
+     */
+    @GetMapping("/log/{logId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getRecycleLogById(
+            @PathVariable("logId") Long logId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        try {
+            Long userId = userDetails.getUser().getId();
+            RecycleLog log = recycleService.getLogById(logId, userId);
+            return ResponseEntity.ok(log);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("message", e.getMessage()));
         }
     }

@@ -25,10 +25,10 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Optional;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.Normalizer;
@@ -47,8 +47,8 @@ public class RecycleService {
     private final UserRepository userRepository;
 
     @Transactional
-    public RecycleLogResponse saveLog(RecycleLogRequest request) {
-        User user = userRepository.findById(request.getUserId())
+    public RecycleLogResponse saveLog(RecycleLogRequest request, Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         RecycleLog log = new RecycleLog();
@@ -66,13 +66,29 @@ public class RecycleService {
                 .build();
     }
 
+    // ✅ [추가] 특정 로그 단건 조회 (자기 것만)
+    @Transactional(readOnly = true)
+    public RecycleLog getLogById(Long logId, Long userId) {
+        Optional<RecycleLog> optionalLog = recycleLogRepository.findById(logId);
+        if (optionalLog.isEmpty()) {
+            throw new IllegalArgumentException("해당 로그를 찾을 수 없습니다.");
+        }
+
+        RecycleLog log = optionalLog.get();
+        if (!log.getUser().getId().equals(userId)) {
+            throw new SecurityException("해당 로그에 접근할 권한이 없습니다.");
+        }
+
+        return log;
+    }
+
     @Transactional(readOnly = true)
     public RecycleAnalysisResult getResultByAnalysisId(Long analysisId) {
         List<RecycleAnalysisResult> results = recycleAnalysisResultRepository.findByAnalysisId(analysisId);
         if (results.isEmpty()) {
             throw new IllegalArgumentException("해당 분석 결과가 없습니다.");
         }
-        return results.get(0); // 필요시 여러 건 중 원하는 조건으로 선택 가능
+        return results.get(0);
     }
 
     @Transactional

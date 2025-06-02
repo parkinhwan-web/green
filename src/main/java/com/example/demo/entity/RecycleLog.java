@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.ZonedDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore; 
 
 @Entity
 @Getter
@@ -18,6 +19,7 @@ public class RecycleLog {
     // ✅ User 엔티티와 연관관계 설정
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     private Long analysisId;
