@@ -172,18 +172,17 @@ public class UserService {
         return users.get(0).getId();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional // 또는 @Transactional(readOnly = false)
     public AppSettingsResponse getAppSettings(Long userId) {
         AppSettings settings = appSettingsRepository.findByUserId(userId)
-                .orElseGet(() -> {
-                    AppSettings newSettings = new AppSettings();
-                    newSettings.setUserId(userId);
-                    newSettings.setTheme("light");
-                    newSettings.setNotifications(true);
-                    newSettings.setLanguage("ko");
-                    appSettingsRepository.save(newSettings);
-                    return newSettings;
-                });
+            .orElseGet(() -> {
+                AppSettings newSettings = new AppSettings();
+                newSettings.setUserId(userId);
+                newSettings.setTheme("light");
+                newSettings.setNotifications(true);
+                newSettings.setLanguage("ko");
+                return appSettingsRepository.save(newSettings); // ✅ 정상 저장 가능
+            });
 
         return AppSettingsResponse.builder()
                 .theme(settings.getTheme())
@@ -191,6 +190,7 @@ public class UserService {
                 .language(settings.getLanguage())
                 .build();
     }
+
 
     @Transactional
     public AppSettingsUpdateResponse updateAppSettings(Long userId, AppSettingsUpdateRequest request) {
