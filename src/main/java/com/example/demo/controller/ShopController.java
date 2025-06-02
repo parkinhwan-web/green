@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/shop")
@@ -27,12 +28,12 @@ public class ShopController {
         return ResponseEntity.ok(couponService.getCoupons());
     }
 
-    /** ✅ 상품권 구매 */
+    /** ✅ 상품권 구매 (빈 body도 허용) */
     @PostMapping("/coupons/{couponId}/purchase")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PurchaseResponse> purchaseCoupon(
             @PathVariable Long couponId,
-            @RequestBody PurchaseRequest request,
+            @RequestBody(required = false) Map<String, Object> body, // ⭐️ body 없어도 허용
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Long userId = userDetails.getUser().getId();

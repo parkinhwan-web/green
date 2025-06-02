@@ -66,7 +66,7 @@ public class RecycleService {
                 .build();
     }
 
-    // ✅ [추가] 특정 로그 단건 조회 (자기 것만)
+    // ✅ 단건 조회 (본인 것만)
     @Transactional(readOnly = true)
     public RecycleLog getLogById(Long logId, Long userId) {
         Optional<RecycleLog> optionalLog = recycleLogRepository.findById(logId);
@@ -80,6 +80,13 @@ public class RecycleService {
         }
 
         return log;
+    }
+
+    // ✅ 삭제 기능 추가 (본인 것만)
+    @Transactional
+    public void deleteLogById(Long logId, Long userId) {
+        RecycleLog log = getLogById(logId, userId); // 권한 검사 포함됨
+        recycleLogRepository.delete(log);
     }
 
     @Transactional(readOnly = true)

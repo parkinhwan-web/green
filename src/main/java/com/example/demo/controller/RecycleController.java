@@ -97,6 +97,28 @@ public class RecycleController {
     }
 
     /**
+     * ✅ 분리수거 로그 삭제 API (본인 로그만 삭제 가능)
+     */
+    @DeleteMapping("/log/{logId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> deleteRecycleLogById(
+            @PathVariable("logId") Long logId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        try {
+            Long userId = userDetails.getUser().getId();
+            recycleService.deleteLogById(logId, userId);
+            return ResponseEntity.ok(Map.of("message", "로그가 삭제되었습니다."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    /**
      * ✅ 분석 결과 조회 API
      */
     @GetMapping("/result/{analysis_id}")
