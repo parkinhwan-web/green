@@ -1,4 +1,6 @@
 target/
-*.jar
+.git
 *.log
-node_modules/
+*.DS_Store
+*.class
+uploads/
