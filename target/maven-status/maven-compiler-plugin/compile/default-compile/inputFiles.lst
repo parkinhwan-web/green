@@ -15,6 +15,7 @@ C:\trashformer\green\src\main\java\com\example\demo\entity\RecycleAnalysisResult
 C:\trashformer\green\src\main\java\com\example\demo\dto\AppSettingsResponse.java
 C:\trashformer\green\src\main\java\com\example\demo\service\UserCouponService.java
 C:\trashformer\green\src\main\java\com\example\demo\entity\UserCoupon.java
+C:\trashformer\green\src\main\java\com\example\demo\dto\AppSettingsUpdateRequest.java
 C:\trashformer\green\src\main\java\com\example\demo\config\SecurityConfig.java
 C:\trashformer\green\src\main\java\com\example\demo\dto\RecycleLogResponse.java
 C:\trashformer\green\src\main\java\com\example\demo\dto\UserLoginResponse.java
@@ -47,6 +48,7 @@ C:\trashformer\green\src\main\java\com\example\demo\service\UserDetailsServiceIm
 C:\trashformer\green\src\main\java\com\example\demo\repository\PointHistoryRepository.java
 C:\trashformer\green\src\main\java\com\example\demo\service\JwtService.java
 C:\trashformer\green\src\main\java\com\example\demo\entity\AppSettings.java
+C:\trashformer\green\src\main\java\com\example\demo\dto\AppSettingsUpdateResponse.java
 C:\trashformer\green\src\main\java\com\example\demo\controller\RecycleController.java
 C:\trashformer\green\src\main\java\com\example\demo\repository\UserRepository.java
 C:\trashformer\green\src\main\java\com\example\demo\controller\UserController.java

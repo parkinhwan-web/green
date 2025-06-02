@@ -10,6 +10,7 @@ META-INF\spring-configuration-metadata.json
 com\example\demo\entity\RecycleAnalysisResult.class
 com\example\demo\config\CorsConfig.class
 com\example\demo\repository\RecycleLogRepository.class
+com\example\demo\dto\AppSettingsUpdateResponse.class
 com\example\demo\dto\PurchaseResponse.class
 com\example\demo\service\RecycleService.class
 com\example\demo\dto\PurchaseRequest.class
@@ -42,6 +43,7 @@ com\example\demo\repository\RecycleAnalysisResultRepository.class
 com\example\demo\DemoApplication.class
 com\example\demo\entity\User.class
 com\example\demo\entity\PointHistory.class
+com\example\demo\dto\AppSettingsUpdateRequest.class
 com\example\demo\repository\AppSettingsRepository.class
 com\example\demo\service\CouponService.class
 com\example\demo\dto\PointUsageRequest.class

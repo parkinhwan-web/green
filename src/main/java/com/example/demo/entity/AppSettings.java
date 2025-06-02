@@ -1,23 +1,24 @@
+// 경로: src/main/java/com/example/demo/entity/AppSettings.java
 package com.example.demo.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
+@Table(name = "app_settings")
 @Getter
 @Setter
-@Table(name = "app_settings")
+@NoArgsConstructor
 public class AppSettings {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", unique = true, nullable = false)
     private Long userId;
-
-    private String theme; // 예: "dark", "light"
-    private boolean notifications;
-    private String language; // 예: "ko", "en"
+    private String theme;
+    private Boolean notifications;
+    private String language;
 }

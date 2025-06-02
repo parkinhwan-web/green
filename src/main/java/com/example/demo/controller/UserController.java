@@ -102,7 +102,6 @@ public class UserController {
         }
     }
 
-    /** ✅ 확장된 프로필 응답 */
     @GetMapping("/profile")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -169,6 +168,21 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    /** ✅ 앱 설정 변경 */
+    @PutMapping("/settings")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> updateAppSettings(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody AppSettingsUpdateRequest request) {
+        Long userId = userDetails.getUser().getId();
+        try {
+            AppSettingsUpdateResponse response = userService.updateAppSettings(userId, request);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 

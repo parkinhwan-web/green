@@ -45,6 +45,14 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
 
+        // ✅ 앱 설정 초기값 저장
+        AppSettings defaultSettings = new AppSettings();
+        defaultSettings.setUserId(savedUser.getId());
+        defaultSettings.setTheme("light");
+        defaultSettings.setNotifications(true);
+        defaultSettings.setLanguage("ko");
+        appSettingsRepository.save(defaultSettings);
+
         return UserSignupResponse.builder()
                 .message("회원가입 성공!")
                 .userId(savedUser.getId())
@@ -63,7 +71,6 @@ public class UserService {
         }
 
         User user = users.get(0);
-
         String token = jwtService.generateToken(user.getEmail(), "USER", user.getId(), user.getUsername());
 
         return UserLoginResponse.builder()
@@ -86,16 +93,10 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다."));
 
-        if (request.getUsername() != null) {
-            user.setUsername(request.getUsername());
-        }
-
-        if (request.getEmail() != null) {
-            user.setEmail(request.getEmail());
-        }
+        if (request.getUsername() != null) user.setUsername(request.getUsername());
+        if (request.getEmail() != null) user.setEmail(request.getEmail());
 
         userRepository.save(user);
-
         return new UserUpdateResponse("사용자 정보 수정 성공!");
     }
 
@@ -104,7 +105,6 @@ public class UserService {
         if (!userRepository.existsById(userId)) {
             throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
         }
-
         userRepository.deleteById(userId);
     }
 
@@ -172,14 +172,47 @@ public class UserService {
         return users.get(0).getId();
     }
 
+    @Transactional(readOnly = true)
     public AppSettingsResponse getAppSettings(Long userId) {
         AppSettings settings = appSettingsRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("앱 설정 정보가 없습니다."));
+                .orElseGet(() -> {
+                    AppSettings newSettings = new AppSettings();
+                    newSettings.setUserId(userId);
+                    newSettings.setTheme("light");
+                    newSettings.setNotifications(true);
+                    newSettings.setLanguage("ko");
+                    appSettingsRepository.save(newSettings);
+                    return newSettings;
+                });
 
         return AppSettingsResponse.builder()
                 .theme(settings.getTheme())
-                .notifications(settings.isNotifications())
+                .notifications(settings.getNotifications())
                 .language(settings.getLanguage())
                 .build();
+    }
+
+    @Transactional
+    public AppSettingsUpdateResponse updateAppSettings(Long userId, AppSettingsUpdateRequest request) {
+        AppSettings settings = appSettingsRepository.findByUserId(userId)
+                .orElseGet(() -> {
+                    AppSettings newSettings = new AppSettings();
+                    newSettings.setUserId(userId);
+                    newSettings.setTheme("light");
+                    newSettings.setNotifications(true);
+                    newSettings.setLanguage("ko");
+                    return newSettings;
+                });
+
+        if (request.getTheme() != null) settings.setTheme(request.getTheme());
+        if (request.getNotifications() != null) settings.setNotifications(request.getNotifications());
+        if (request.getLanguage() != null) settings.setLanguage(request.getLanguage());
+
+        appSettingsRepository.save(settings);
+
+        return new AppSettingsUpdateResponse(
+                "설정이 변경되었습니다.",
+                ZonedDateTime.now().toString()
+        );
     }
 }
