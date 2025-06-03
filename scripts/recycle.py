@@ -1,43 +1,52 @@
+from flask import Flask, request, jsonify
 from ultralytics import YOLO
-import cv2, os, sys, argparse
+import os
+import cv2
+import tempfile
 
-# ── 1) 인자 파싱 ────────────────────────────────
-ap = argparse.ArgumentParser()
-ap.add_argument("--image", required=True, help="분석할 이미지 절대경로")
-args = ap.parse_args()
+app = Flask(__name__)
 
-# ── 2) 가중치 절대경로(스크립트 기준) ────────────
+# 모델 로드 (서버 실행 시 1회만)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-WEIGHT   = os.path.join(BASE_DIR, "best.pt")
-if not os.path.exists(WEIGHT):
-    print(f"error: weight file not found → {WEIGHT}")
-    sys.exit(1)
+WEIGHT = os.path.join(BASE_DIR, "best.pt")
+model = YOLO(WEIGHT)
 
-# ── 3) 모델 로드 & 이미지 읽기 ──────────────────
-model  = YOLO(WEIGHT)
-image  = cv2.imread(args.image)
-if image is None:
-    print("error: cannot read image")
-    sys.exit(1)
-
-# ── 4) 추론 ─────────────────────────────────────
-results = model(image, verbose=False)
-
-# 가장 신뢰도 높은 박스 1개만 사용
-best = max(results[0].boxes, key=lambda b: float(b.conf[0]))
-cls_id     = int(best.cls[0])
-confidence = float(best.conf[0])
-category   = model.names[cls_id]
-
-# ── 5) 분리수거 안내 매핑 ───────────────────────
 DISPOSAL = {
     "can":      "캔 전용 수거함에 버려주세요.",
     "plastic":  "플라스틱 전용 수거함에 버려주세요.",
     "paper":    "종이류 전용 수거함에 버려주세요.",
 }
-disposal = DISPOSAL.get(category, "일반 쓰레기통에 버려주세요.")
 
-# ── 6) Java 파싱 포맷대로 3줄 출력 ──────────────
-print(category)           # 1줄
-print(f"{confidence:.4f}")# 2줄
-print(disposal)           # 3줄
+@app.route("/api/analyze", methods=["POST"])
+def analyze_image():
+    if 'image' not in request.files:
+        return jsonify({"error": "이미지 파일이 필요합니다."}), 400
+
+    image_file = request.files['image']
+    if image_file.filename == "":
+        return jsonify({"error": "파일 이름이 비어 있습니다."}), 400
+
+    # 임시 파일 저장
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp:
+        image_file.save(temp.name)
+        img = cv2.imread(temp.name)
+
+    if img is None:
+        return jsonify({"error": "이미지를 읽을 수 없습니다."}), 400
+
+    # 모델 추론
+    results = model(img, verbose=False)
+    best = max(results[0].boxes, key=lambda b: float(b.conf[0]))
+    cls_id = int(best.cls[0])
+    confidence = float(best.conf[0])
+    category = model.names[cls_id]
+    disposal = DISPOSAL.get(category, "일반 쓰레기통에 버려주세요.")
+
+    return jsonify({
+        "category": category,
+        "confidence": round(confidence, 4),
+        "disposal_method": disposal
+    })
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)

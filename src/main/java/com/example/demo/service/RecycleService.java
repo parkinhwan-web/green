@@ -18,8 +18,17 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+
 import java.util.Map;
 import java.util.HashMap;
 
@@ -163,6 +172,10 @@ public class RecycleService {
     @Value("${script.weight}")
     private String weightPath;
 
+    private final RestTemplate restTemplate = new RestTemplate();
+    @Value("${ai.api.url}")
+    private String aiApiUrl;
+
     @Transactional
     public void analyzeAndSave(MultipartFile image, long analysisId, Long userId) {
         try {
@@ -177,27 +190,24 @@ public class RecycleService {
             Path target = uploadPath.resolve(fileName);
 
             image.transferTo(target);
-            if (!Files.exists(target)) {
-                throw new IllegalStateException("파일 저장 실패: " + target);
-            }
 
-            String pythonOutput = runPythonScript(target.toString());
-            log.warn("\uD83D\uDD0D PY FULL OUTPUT\n{}", pythonOutput);
+            // 1️⃣ 강화학습 API에 이미지 전송
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-            String category;
-            double confidence;
-            String disposalMethod;
-            if (pythonOutput.startsWith("error:")) {
-                category = "unknown";
-                confidence = 0.0;
-                disposalMethod = "분석 실패";
-            } else {
-                List<String> lines = pythonOutput.lines().collect(Collectors.toList());
-                category = lines.get(0).trim();
-                confidence = lines.size() > 1 ? Double.parseDouble(lines.get(1).trim()) : 0.0;
-                disposalMethod = lines.size() > 2 ? lines.get(2).trim() : "";
-            }
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("image", new FileSystemResource(target.toFile()));
 
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+            ResponseEntity<Map> response = restTemplate.postForEntity(aiApiUrl, requestEntity, Map.class);
+
+            // 2️⃣ 결과 파싱
+            Map<String, Object> resultMap = response.getBody();
+            String category = (String) resultMap.getOrDefault("category", "unknown");
+            double confidence = Double.parseDouble(resultMap.getOrDefault("confidence", 0.0).toString());
+            String disposalMethod = (String) resultMap.getOrDefault("disposal_method", "");
+
+            // 3️⃣ DB 저장 및 포인트 지급
             RecycleAnalysisResult result = new RecycleAnalysisResult();
             result.setAnalysisId(analysisId);
             result.setCategory(category);
@@ -232,12 +242,12 @@ public class RecycleService {
 
             pointHistoryRepository.save(history);
 
-            System.out.println("\uD83C\uDF89 [포인트 지급] userId=" + userId + ", 현재 포인트=" + point.getPoints());
         } catch (IOException e) {
             log.error("이미지 처리 중 IOException 발생: {}", e.getMessage(), e);
             throw new RuntimeException("이미지 처리 중 오류 발생", e);
         }
     }
+
 
     private String runPythonScript(String imgPath) {
         ProcessBuilder pb = new ProcessBuilder(
