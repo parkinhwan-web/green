@@ -23,11 +23,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -179,6 +176,7 @@ public class RecycleService {
     @Transactional
     public void analyzeAndSave(MultipartFile image, long analysisId, Long userId) {
         try {
+            // 이미지 저장
             Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
             Files.createDirectories(uploadPath);
 
@@ -188,10 +186,9 @@ public class RecycleService {
                     .replaceAll("[^a-zA-Z0-9._-]", "_");
             String fileName = UUID.randomUUID() + "_" + ascii;
             Path target = uploadPath.resolve(fileName);
-
             image.transferTo(target);
 
-            // 1️⃣ 강화학습 API에 이미지 전송
+            // 1️⃣ Python API에 HTTP 요청
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -205,7 +202,7 @@ public class RecycleService {
             Map<String, Object> resultMap = response.getBody();
             String category = (String) resultMap.getOrDefault("category", "unknown");
             double confidence = Double.parseDouble(resultMap.getOrDefault("confidence", 0.0).toString());
-            String disposalMethod = (String) resultMap.getOrDefault("disposal_method", "");
+            String disposalMethod = (String) resultMap.getOrDefault("disposal_method", "일반 쓰레기통에 버려주세요.");
 
             // 3️⃣ DB 저장 및 포인트 지급
             RecycleAnalysisResult result = new RecycleAnalysisResult();
@@ -239,7 +236,6 @@ public class RecycleService {
             history.setWasteTypeKorean(category);
             history.setPoints(1000);
             history.setBalance(point.getPoints());
-
             pointHistoryRepository.save(history);
 
         } catch (IOException e) {
@@ -247,6 +243,7 @@ public class RecycleService {
             throw new RuntimeException("이미지 처리 중 오류 발생", e);
         }
     }
+
 
 
     private String runPythonScript(String imgPath) {
