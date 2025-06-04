@@ -12,12 +12,16 @@ WEIGHT = os.path.join(BASE_DIR, "best.pt")
 model = YOLO(WEIGHT)
 
 DISPOSAL = {
-    "can":      "캔 전용 수거함에 버려주세요.",
-    "plastic":  "플라스틱 전용 수거함에 버려주세요.",
-    "paper":    "종이류 전용 수거함에 버려주세요.",
+    "캔":      "캔 전용 수거함에 버려주세요.",
+    "플라스틱":  "플라스틱 전용 수거함에 버려주세요.",
+    "종이":    "종이류 전용 수거함에 버려주세요.",
+    "비닐":    "비닐 전용 수거함에 버려주세요",
+    "페트병":  "페트병 전용 수거함에 버려주세요",
+    "유리병":  "유리 전용 수거함에 버려주세요",
+    "스티로폼": "스티로폼 전용 수거함에 버려주세요"
 }
 
-@app.route("/api/analyze", methods=["POST"])
+@app.route("/recycle/analyze", methods=["POST"])
 def analyze_image():
     if 'image' not in request.files:
         return jsonify({"error": "이미지 파일이 필요합니다."}), 400
