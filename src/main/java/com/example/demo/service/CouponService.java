@@ -4,11 +4,13 @@ import com.example.demo.dto.PurchaseResponse;
 import com.example.demo.entity.*;
 import com.example.demo.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StreamUtils;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.Base64;
@@ -90,7 +92,6 @@ public class CouponService {
     public PurchaseResponse useCoupon(User user, Long couponId) {
         Long userId = user.getId();
 
-        // ✅ 중복 문제 해결: 사용되지 않은 쿠폰 중 하나만 안전하게 조회
         UserCoupon userCoupon = userCouponRepository
                 .findFirstByUserIdAndCouponIdAndUsedFalse(userId, couponId)
                 .orElseThrow(() -> new IllegalArgumentException("사용 가능한 쿠폰이 없습니다."));
@@ -101,8 +102,8 @@ public class CouponService {
         userCouponRepository.save(userCoupon);
 
         Coupon coupon = userCoupon.getCoupon();
-        String imageUrl = coupon.getImageUrl();
-        String base64Image = encodeImageToBase64(imageUrl);
+        String imageUrl = coupon.getImageUrl(); // 예: "/images/2.png"
+        String base64Image = encodeImageToBase64(imageUrl); // static 경로에서 읽어오기
 
         PurchaseResponse.CouponDetails details = new PurchaseResponse.CouponDetails();
         details.setBrandName(coupon.getBrandName());
@@ -122,15 +123,22 @@ public class CouponService {
         return response;
     }
 
-    private String encodeImageToBase64(String imageUrl) {
-        if (imageUrl == null || imageUrl.isBlank() || imageUrl.equalsIgnoreCase("없음")) {
+    /** base64 인코딩을 위해 classpath에서 이미지 로드 */
+    private String encodeImageToBase64(String imagePath) {
+        if (imagePath == null || imagePath.isBlank() || imagePath.equalsIgnoreCase("없음")) {
             return "";
         }
-        try (InputStream in = new URL(imageUrl).openStream()) {
-            byte[] imageBytes = in.readAllBytes();
-            return Base64.getEncoder().encodeToString(imageBytes);
-        } catch (Exception e) {
-            throw new RuntimeException("이미지를 base64로 변환할 수 없습니다: " + imageUrl, e);
+        try {
+            // imagePath 예: "/images/2.png"
+            String path = "static" + imagePath; // "static/images/2.png"
+            ClassPathResource resource = new ClassPathResource(path);
+            try (InputStream in = resource.getInputStream()) {
+                byte[] imageBytes = StreamUtils.copyToByteArray(in);
+                return Base64.getEncoder().encodeToString(imageBytes);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("이미지를 base64로 변환할 수 없습니다: " + imagePath, e);
         }
     }
 }
+
