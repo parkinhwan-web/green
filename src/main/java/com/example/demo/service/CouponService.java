@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.PurchaseResponse;
+import java.net.URL;
 import com.example.demo.entity.*;
 import com.example.demo.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -124,21 +125,26 @@ public class CouponService {
     }
 
     /** base64 인코딩을 위해 classpath에서 이미지 로드 */
-    private String encodeImageToBase64(String imagePath) {
-        if (imagePath == null || imagePath.isBlank() || imagePath.equalsIgnoreCase("없음")) {
+    private String encodeImageToBase64(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank() || imageUrl.equalsIgnoreCase("없음")) {
             return "";
         }
+
         try {
-            // imagePath 예: "/images/2.png"
-            String path = "static" + imagePath; // "static/images/2.png"
-            ClassPathResource resource = new ClassPathResource(path);
-            try (InputStream in = resource.getInputStream()) {
-                byte[] imageBytes = StreamUtils.copyToByteArray(in);
+            // ✅ 상대 경로면 도메인을 붙여 절대경로로 만든다
+            if (!imageUrl.startsWith("http")) {
+                imageUrl = "https://green-87zt.onrender.com" + imageUrl;
+            }
+
+            try (InputStream in = new URL(imageUrl).openStream()) {
+                byte[] imageBytes = in.readAllBytes();
                 return Base64.getEncoder().encodeToString(imageBytes);
             }
-        } catch (IOException e) {
-            throw new RuntimeException("이미지를 base64로 변환할 수 없습니다: " + imagePath, e);
+
+        } catch (Exception e) {
+            throw new RuntimeException("이미지를 base64로 변환할 수 없습니다: " + imageUrl, e);
         }
     }
+
 }
 
