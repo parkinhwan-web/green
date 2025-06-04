@@ -22,5 +22,3 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 //         };
 //     }
 // }
-
-http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
