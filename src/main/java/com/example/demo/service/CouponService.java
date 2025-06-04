@@ -1,16 +1,13 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.PurchaseResponse;
-import java.net.URL;
 import com.example.demo.entity.*;
 import com.example.demo.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StreamUtils;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -104,7 +101,7 @@ public class CouponService {
 
         Coupon coupon = userCoupon.getCoupon();
         String imageUrl = coupon.getImageUrl(); // 예: "/images/2.png"
-        String base64Image = encodeImageToBase64(imageUrl); // static 경로에서 읽어오기
+        String base64Image = encodeImageToBase64(imageUrl);
 
         PurchaseResponse.CouponDetails details = new PurchaseResponse.CouponDetails();
         details.setBrandName(coupon.getBrandName());
@@ -131,12 +128,17 @@ public class CouponService {
         }
 
         try {
-            // ✅ 상대 경로면 도메인을 붙여 절대경로로 만든다
-            if (!imageUrl.startsWith("http")) {
-                imageUrl = "https://green-87zt.onrender.com" + imageUrl;
+            // 외부 URL이면 URL 열기
+            if (imageUrl.startsWith("http")) {
+                try (InputStream in = new java.net.URL(imageUrl).openStream()) {
+                    byte[] imageBytes = in.readAllBytes();
+                    return Base64.getEncoder().encodeToString(imageBytes);
+                }
             }
 
-            try (InputStream in = new URL(imageUrl).openStream()) {
+            // 내부 리소스 경로이면 classpath에서 로드
+            ClassPathResource resource = new ClassPathResource("static" + imageUrl);
+            try (InputStream in = resource.getInputStream()) {
                 byte[] imageBytes = in.readAllBytes();
                 return Base64.getEncoder().encodeToString(imageBytes);
             }
@@ -145,6 +147,4 @@ public class CouponService {
             throw new RuntimeException("이미지를 base64로 변환할 수 없습니다: " + imageUrl, e);
         }
     }
-
 }
-
