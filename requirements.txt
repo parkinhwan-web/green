@@ -2,6 +2,5 @@ flask
 gunicorn
 ultralytics
 opencv-python
-cv2
 tempfile
 os
