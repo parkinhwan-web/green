@@ -1,4 +1,10 @@
 from flask import Flask, request, jsonify
+import torch
+from ultralytics.nn.tasks import DetectionModel
+
+# 신뢰 가능한 클래스 등록
+torch.serialization.add_safe_globals({'ultralytics.nn.tasks.DetectionModel': DetectionModel})
+
 from ultralytics import YOLO
 import os
 import cv2
