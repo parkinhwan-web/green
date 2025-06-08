@@ -1,4 +1,4 @@
 flask
 gunicorn
-ultralytics==8.0.180
+ultralytics>=8.1.0
 opencv-python
