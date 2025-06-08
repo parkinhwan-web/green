@@ -5,6 +5,7 @@ from ultralytics.nn.modules.conv import Conv
 from torch.nn.modules.container import Sequential
 from torch.nn.modules.conv import Conv2d  
 from torch.nn.modules.batchnorm import BatchNorm2d  
+from torch.nn.modules.activation import SiLU  
 
 # 필요한 클래스들을 모두 리스트에 등록
 torch.serialization.add_safe_globals([
@@ -12,7 +13,8 @@ torch.serialization.add_safe_globals([
     Sequential,
     Conv,
     Conv2d,
-    BatchNorm2d,  
+    BatchNorm2d,
+    SiLU,  
 ])
 
 from ultralytics import YOLO
