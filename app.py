@@ -4,13 +4,15 @@ from ultralytics.nn.tasks import DetectionModel
 from ultralytics.nn.modules.conv import Conv
 from torch.nn.modules.container import Sequential
 from torch.nn.modules.conv import Conv2d  
+from torch.nn.modules.batchnorm import BatchNorm2d  
 
-# 필요한 클래스들을 모두 리스트에 넣어 등록
+# 필요한 클래스들을 모두 리스트에 등록
 torch.serialization.add_safe_globals([
     DetectionModel,
     Sequential,
     Conv,
-    Conv2d,       #
+    Conv2d,
+    BatchNorm2d,  
 ])
 
 from ultralytics import YOLO
