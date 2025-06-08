@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import torch
 from ultralytics.nn.tasks import DetectionModel
+from torch.nn.modules.container import Sequential
 
 # 신뢰 가능한 클래스 등록
 torch.serialization.add_safe_globals([
