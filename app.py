@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 # 모델 로드 (서버 실행 시 1회만)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-WEIGHT = os.path.join(BASE_DIR, "best.safetensors")
+WEIGHT = os.path.join(BASE_DIR, "best.torchscript")
 model = YOLO(WEIGHT)
 
 DISPOSAL = {
