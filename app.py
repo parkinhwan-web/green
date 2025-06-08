@@ -1,22 +1,5 @@
 from flask import Flask, request, jsonify
 import torch
-from ultralytics.nn.tasks import DetectionModel
-from ultralytics.nn.modules.conv import Conv
-from torch.nn.modules.container import Sequential
-from torch.nn.modules.conv import Conv2d  
-from torch.nn.modules.batchnorm import BatchNorm2d  
-from torch.nn.modules.activation import SiLU  
-
-# 필요한 클래스들을 모두 리스트에 등록
-torch.serialization.add_safe_globals([
-    DetectionModel,
-    Sequential,
-    Conv,
-    Conv2d,
-    BatchNorm2d,
-    SiLU,  
-])
-
 from ultralytics import YOLO
 import os
 import cv2
@@ -26,7 +9,7 @@ app = Flask(__name__)
 
 # 모델 로드 (서버 실행 시 1회만)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-WEIGHT = os.path.join(BASE_DIR, "best.pt")
+WEIGHT = os.path.join(BASE_DIR, "best.safetensors")
 model = YOLO(WEIGHT)
 
 DISPOSAL = {
