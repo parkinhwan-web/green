@@ -3,7 +3,10 @@ import torch
 from ultralytics.nn.tasks import DetectionModel
 
 # 신뢰 가능한 클래스 등록
-torch.serialization.add_safe_globals([DetectionModel])
+torch.serialization.add_safe_globals([
+    DetectionModel,
+    Sequential
+])
 
 from ultralytics import YOLO
 import os
