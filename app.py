@@ -1,12 +1,14 @@
 from flask import Flask, request, jsonify
 import torch
 from ultralytics.nn.tasks import DetectionModel
+from ultralytics.nn.modules.conv import Conv
 from torch.nn.modules.container import Sequential
 
-# 신뢰 가능한 클래스 등록
+# 안전글로벌에 필요한 클래스들을 모두 등록
 torch.serialization.add_safe_globals([
     DetectionModel,
-    Sequential
+    Sequential,
+    Conv
 ])
 
 from ultralytics import YOLO
