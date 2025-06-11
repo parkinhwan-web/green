@@ -44,7 +44,7 @@ public class RecycleController {
         long analysisId = analysisIdGenerator.getAndIncrement();
         Long userId = userDetails.getUser().getId();
 
-        recycleService.analyzeAndSave(image, analysisId, userId);
+        recycleService.analyzeAndSave(image, userId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("analysis_id", analysisId);
