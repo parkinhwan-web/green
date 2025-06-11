@@ -25,6 +25,15 @@ public class RecycleLog {
     private Long analysisId;
     private String disposalCategory;
     private String disposalMethod;
+    private String category;
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
 
     private ZonedDateTime createdAt = ZonedDateTime.now();
 }

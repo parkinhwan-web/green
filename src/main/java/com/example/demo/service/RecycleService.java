@@ -238,6 +238,13 @@ public class RecycleService {
             history.setBalance(point.getPoints());
             pointHistoryRepository.save(history);
 
+            // ✅ 분석 로그 저장
+            RecycleLog recycleLog = new RecycleLog();
+            recycleLog.setUser(user);  // userId가 아니라 객체 넣기
+            recycleLog.setCategory(category);
+            recycleLog.setCreatedAt(ZonedDateTime.now());
+            recycleLogRepository.save(recycleLog);
+
         } catch (IOException e) {
             log.error("이미지 처리 중 IOException 발생: {}", e.getMessage(), e);
             throw new RuntimeException("이미지 처리 중 오류 발생", e);
