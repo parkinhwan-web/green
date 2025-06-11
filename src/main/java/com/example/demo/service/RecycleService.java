@@ -290,7 +290,7 @@ public class RecycleService {
 
     return logs.stream()
             .map(log -> RecycleLogResponse.builder()
-                    .id(log.getId())
+                    .logId(log.getId())                // ✅ 수정된 부분
                     .analysisId(log.getAnalysisId())
                     .category(log.getCategory())
                     .disposalCategory(log.getDisposalCategory())
@@ -298,8 +298,7 @@ public class RecycleService {
                     .createdAt(log.getCreatedAt())
                     .build())
             .toList();
-}
-
+    }
 
     public Point getUserPointInfo(Long userId) {
         return pointRepository.findByUserId(userId)
