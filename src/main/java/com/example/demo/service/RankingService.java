@@ -2,9 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.LeaderboardResponse;
 import com.example.demo.dto.UserRankingDto;
-import com.example.demo.entity.User;
 import com.example.demo.repository.RecycleLogRepository;
-import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +16,6 @@ import java.util.stream.Collectors;
 public class RankingService {
 
     private final RecycleLogRepository recycleLogRepository;
-    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public LeaderboardResponse getLeaderboard() {
@@ -27,14 +24,11 @@ public class RankingService {
         List<UserRankingDto> rankings = rawData.stream()
                 .map(data -> {
                     Long userId = (Long) data[0];
-                    Long count = (Long) data[1];
-                    String username = userRepository.findById(userId)
-                            .map(User::getUsername)
-                            .orElse("알 수 없음");
+                    String username = (String) data[1];
+                    Long count = (Long) data[2];
 
                     return new UserRankingDto(0, userId, username, count);
                 })
-                .sorted((a, b) -> Long.compare(b.getRecycleCount(), a.getRecycleCount()))
                 .collect(Collectors.toList());
 
         for (int i = 0; i < rankings.size(); i++) {
