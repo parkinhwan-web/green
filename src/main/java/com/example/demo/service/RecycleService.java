@@ -27,7 +27,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
 
 import java.util.Map;
-import java.util.HashMap;
 
 import java.time.ZonedDateTime;
 import java.util.UUID;
@@ -92,22 +91,11 @@ public class RecycleService {
 
         long recycleCount = recycleLogRepository.countByUserId(userId);
 
-        int previousRank = getUserRank(userId);
-        int currentRank = getUserRank(userId);
-
         return RecycleLogResponse.builder()
-            .success(true)
             .logId(saved.getId())
-            .pointsEarned(pointsEarned)
             .totalPoints(point.getPoints())
             .recycleCount(recycleCount)
             .message(request.getDisposalCategory() + " 분리수거가 기록되었습니다.")
-            .wasteTypeKorean(request.getDisposalCategory())
-            .rankChange(Map.of(
-                "previous_rank", previousRank,
-                "current_rank", currentRank,
-                "rank_improved", previousRank > currentRank
-            ))
             .build();
     }
 
@@ -288,16 +276,25 @@ public class RecycleService {
     public List<RecycleLogResponse> getLogsByUser(Long userId) {
     List<RecycleLog> logs = recycleLogRepository.findByUserId(userId);
 
+    long recycleCount = recycleLogRepository.countByUserId(userId);
+    long totalPoints = pointRepository.findByUserId(userId)
+        .map(Point::getPoints)
+        .orElse(0);
+
     return logs.stream()
             .map(log -> RecycleLogResponse.builder()
-                    .logId(log.getId())                // ✅ 수정된 부분
+                    .logId(log.getId())
                     .analysisId(log.getAnalysisId())
                     .category(log.getCategory())
                     .disposalCategory(log.getDisposalCategory())
                     .disposalMethod(log.getDisposalMethod())
                     .createdAt(log.getCreatedAt())
-                    .build())
-            .toList();
+                    .recycleCount(recycleCount)
+                    .totalPoints(totalPoints) 
+                    .message(log.getDisposalCategory() + " 분리수거가 기록되었습니다.")
+                    .build()
+            )
+            .collect(Collectors.toList());
     }
 
     public Point getUserPointInfo(Long userId) {
