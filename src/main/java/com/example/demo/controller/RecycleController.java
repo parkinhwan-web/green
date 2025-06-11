@@ -18,6 +18,7 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.List;
 
 @RestController
 @RequestMapping("/recycle")
@@ -57,6 +58,7 @@ public class RecycleController {
 
     /**
      * ✅ 분리수거 활동 기록 API (인증 사용자 기반 userId 사용)
+     * 수기로 기록, 주로 테스트 용용
      */
     @PostMapping("/log")
     @PreAuthorize("isAuthenticated()")
@@ -72,6 +74,17 @@ public class RecycleController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("message", e.getMessage()));
         }
+    }
+
+    /**
+     * ✅ 분리수거 활동 조회 (한 유저의 모든 기록)
+     */
+    @GetMapping("/logs")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getMyRecycleLogs(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails.getUser().getId();
+        List<RecycleLogResponse> logs = recycleService.getLogsByUser(userId);
+        return ResponseEntity.ok(logs);
     }
 
     /**

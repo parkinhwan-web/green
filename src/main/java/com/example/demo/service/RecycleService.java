@@ -246,7 +246,7 @@ public class RecycleService {
             recycleLog.setCategory(category);
             recycleLog.setDisposalCategory(category);
             recycleLog.setDisposalMethod(disposalMethod);   
-            recycleLog.setAnalysisId(analysisId);
+            recycleLog.setAnalysisId(result.getAnalysisId()); // 분석 결과의 analysis_Id과 연동
             recycleLog.setCreatedAt(ZonedDateTime.now());
             recycleLogRepository.save(recycleLog);
 
@@ -284,6 +284,22 @@ public class RecycleService {
             return "error:" + e.getMessage();
         }
     }
+
+    public List<RecycleLogResponse> getLogsByUser(Long userId) {
+    List<RecycleLog> logs = recycleLogRepository.findByUserId(userId);
+
+    return logs.stream()
+            .map(log -> RecycleLogResponse.builder()
+                    .id(log.getId())
+                    .analysisId(log.getAnalysisId())
+                    .category(log.getCategory())
+                    .disposalCategory(log.getDisposalCategory())
+                    .disposalMethod(log.getDisposalMethod())
+                    .createdAt(log.getCreatedAt())
+                    .build())
+            .toList();
+}
+
 
     public Point getUserPointInfo(Long userId) {
         return pointRepository.findByUserId(userId)
