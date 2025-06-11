@@ -174,8 +174,10 @@ public class RecycleService {
     private String aiApiUrl;
 
     @Transactional
-    public void analyzeAndSave(MultipartFile image, long analysisId, Long userId) {
+    public void analyzeAndSave(MultipartFile image, Long userId) {
         try {
+            Long analysisId = System.currentTimeMillis();  // millisecond 단위의 ID
+
             // 이미지 저장
             Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
             Files.createDirectories(uploadPath);
@@ -240,8 +242,11 @@ public class RecycleService {
 
             // ✅ 분석 로그 저장
             RecycleLog recycleLog = new RecycleLog();
-            recycleLog.setUser(user);  // userId가 아니라 객체 넣기
+            recycleLog.setUser(user);  
             recycleLog.setCategory(category);
+            recycleLog.setDisposalCategory(category);
+            recycleLog.setDisposalMethod(disposalMethod);   
+            recycleLog.setAnalysisId(analysisId);
             recycleLog.setCreatedAt(ZonedDateTime.now());
             recycleLogRepository.save(recycleLog);
 
