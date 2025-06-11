@@ -8,6 +8,7 @@ import java.time.ZonedDateTime;
 @Getter
 @Builder
 public class RecycleLogResponse {
+    private boolean success;
     private Long id;
     private Long analysisId;
     private String category;
