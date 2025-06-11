@@ -11,6 +11,7 @@ import com.example.greenlens.model.Point;
 import com.example.greenlens.model.response.PointResponse;
 import com.example.greenlens.model.request.PointUseRequest;
 import com.example.greenlens.model.AppSettings;
+import com.example.greenlens.model.response.LeaderboardResponse;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -90,10 +91,9 @@ public interface ApiService {
             @Body Map<String, Object> logData);
 
     // 분리수거 활동 조회 API
-    @GET("recycle/log/{user_id}")
+    @GET("recycle/logs")
     Call<List<Map<String, Object>>> getRecycleActivities(
-            @Header("Authorization") String token,
-            @Path("user_id") Long userId);
+            @Header("Authorization") String token);
 
     // 분리수거 활동 삭제 API
     @DELETE("recycle/log/{log_id}")
@@ -111,6 +111,11 @@ public interface ApiService {
     Call<AppSettings> updateAppSettings(
             @Header("Authorization") String token,
             @Body AppSettings settings);
+
+    // 랭킹 조회 API
+    @GET("ranking/leaderboard")
+    Call<LeaderboardResponse> getLeaderboard(
+            @Header("Authorization") String token);
 
     // ======== 쿠폰/상품권 관련 API ========
 

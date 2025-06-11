@@ -38,6 +38,7 @@ import com.example.greenlens.manager.UserManager;
 import com.example.greenlens.model.User;
 import com.example.greenlens.model.response.AnalysisResultResponse;
 import com.example.greenlens.model.response.AnalyzeResponse;
+import com.example.greenlens.repository.UserRepository;
 import com.example.greenlens.util.DevLog;
 import com.example.greenlens.view.fragment.ResultBottomSheetDialog;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -607,40 +608,39 @@ public class CameraActivity extends AppCompatActivity {
         pointData.put("analysis_id", analysisId);
         pointData.put("disposal_category", wasteType);
         pointData.put("disposal_method", disposalMethod);
+        pointData.put("points", 100); // 기본 포인트 100점
 
         apiService.logRecycleActivity(authToken, pointData).enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
-                if (response.isSuccessful()) {
-                    DevLog.d(TAG, "포인트 적립 성공: 100P");
+                if (response.isSuccessful() && response.body() != null) {
+                    Map<String, Object> result = response.body();
+                    boolean success = (boolean) result.get("success");
+                    if (success) {
+                        DevLog.d(TAG, "포인트 적립 성공: 100P");
+                        // 포인트 내역 업데이트를 위해 사용자 정보 새로고침
+                        userManager.getUserRepository().fetchUserProfile(userManager.getToken(), new UserRepository.UserProfileCallback() {
+                            @Override
+                            public void onSuccess(User user) {
+                                DevLog.d(TAG, "사용자 정보 업데이트 성공");
+                            }
 
-                    // 현재 사용자의 포인트 업데이트 (100P로 변경)
-                    if (currentUser != null) {
-                        int updatedPoints = currentUser.getPoints() + 100;
-                        currentUser.setPoints(updatedPoints);
-                        userManager.saveUser(currentUser);
+                            @Override
+                            public void onError(String message) {
+                                DevLog.e(TAG, "사용자 정보 업데이트 실패: " + message);
+                            }
+                        });
+                    } else {
+                        DevLog.e(TAG, "포인트 적립 실패: " + result.get("message"));
                     }
-
-                    // 포인트 적립 안내 토스트 메시지 (100P로 변경)
-                    String wasteTypeKorean = getWasteTypeKorean(wasteType);
-                    Toast.makeText(CameraActivity.this,
-                            wasteTypeKorean + " 분리수거 성공! 100P가 적립되었습니다.",
-                            Toast.LENGTH_LONG).show();
-                } else if (response.code() == 403 || response.code() == 401) {
-                    // 토큰 만료 처리
-                    DevLog.e(TAG, "포인트 적립 실패: 토큰 만료");
-                    runOnUiThread(() -> {
-                        Toast.makeText(CameraActivity.this, "인증이 만료되었습니다. 다시 로그인해주세요.", Toast.LENGTH_SHORT).show();
-                        redirectToLogin();
-                    });
                 } else {
-                    DevLog.e(TAG, "포인트 적립 실패: " + response.code());
+                    DevLog.e(TAG, "포인트 적립 API 호출 실패: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<Map<String, Object>> call, Throwable t) {
-                DevLog.e(TAG, "포인트 적립 API 호출 실패", t);
+                DevLog.e(TAG, "포인트 적립 네트워크 오류", t);
             }
         });
     }

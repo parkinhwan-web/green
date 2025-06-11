@@ -86,6 +86,8 @@ public class ResultBottomSheetDialog extends BottomSheetDialogFragment {
                 iconView.setImageResource(R.drawable.ic_plastic_detail);
                 titleView.setText("페트병");
                 descView.setText("무색 투명한 먹는샘물, 음료\n폴리에틸렌테레프탈레이트(PET)병");
+                // 페트병은 플라스틱으로 처리
+                type = "plastic";
                 break;
             case "plastic":
                 iconView.setImageResource(R.drawable.ic_plastic_detail);

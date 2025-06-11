@@ -2,9 +2,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="60dp"
+    android:layout_height="wrap_content"
     android:background="@color/white"
-    android:padding="16dp">
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="12dp">
 
     <!-- 날짜 -->
     <TextView
@@ -27,11 +28,11 @@
         android:text="종이류"
         android:textColor="@color/white"
         android:textSize="13sp"
-        android:paddingHorizontal="32dp"
-        android:paddingVertical="2dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="4dp"
         android:background="@drawable/bg_green_round"
         style="@style/TextTitle"
-        android:layout_marginStart="7dp"
+        android:layout_marginStart="8dp"
         app:layout_constraintStart_toEndOf="@id/text_date"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>
@@ -59,19 +60,21 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center">
+            android:gravity="center"
+            android:layout_marginTop="2dp">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:src="@drawable/ic_plus"/>
 
             <TextView
                 android:id="@+id/text_earned_point"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="10P"
+                android:text="100P"
                 android:textSize="14sp"
+                android:layout_marginStart="2dp"
                 style="@style/TextTitle"/>
         </LinearLayout>
     </LinearLayout>
@@ -98,11 +101,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center">
+            android:gravity="center"
+            android:layout_marginTop="2dp">
 
             <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:src="@drawable/ic_point"/>
 
             <TextView
@@ -111,6 +115,7 @@
                 android:layout_height="wrap_content"
                 android:text="510P"
                 android:textSize="14sp"
+                android:layout_marginStart="2dp"
                 style="@style/TextTitle"/>
         </LinearLayout>
     </LinearLayout>

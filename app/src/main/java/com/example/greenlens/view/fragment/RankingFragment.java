@@ -4,105 +4,101 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.greenlens.databinding.FragmentRankingBinding;
+import com.example.greenlens.R;
+import com.example.greenlens.manager.UserManager;
+import com.example.greenlens.util.DevLog;
 import com.example.greenlens.view.adapter.RankingAdapter;
-import com.example.greenlens.model.User;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.example.greenlens.viewmodel.RankingViewModel;
 
 public class RankingFragment extends Fragment {
-    private FragmentRankingBinding binding;
+    private RankingViewModel viewModel;
     private RankingAdapter adapter;
+    private RecyclerView recyclerView;
+    private ProgressBar progressBar;
+    private TextView textTotalUsers;
+    private View emptyView;
+    private UserManager userManager;
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        binding = FragmentRankingBinding.inflate(inflater, container, false);
-        return binding.getRoot();
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        viewModel = new ViewModelProvider(this).get(RankingViewModel.class);
+        userManager = UserManager.getInstance(requireContext());
     }
 
+    @Nullable
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_ranking, container, false);
 
-        // RecyclerView 초기화
-        binding.recyclerViewRanking.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerView = view.findViewById(R.id.recyclerViewRanking);
+        progressBar = view.findViewById(R.id.progressBar);
+        textTotalUsers = view.findViewById(R.id.textTotalUsers);
+        emptyView = view.findViewById(R.id.emptyView);
 
-        // 어댑터 생성 및 설정
+        setupRecyclerView();
+        setupObservers();
+        loadRankings();
+
+        return view;
+    }
+
+    private void setupRecyclerView() {
         adapter = new RankingAdapter();
-        binding.recyclerViewRanking.setAdapter(adapter);
-
-        // 테스트용 데이터 로드
-        loadDummyData();
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerView.setAdapter(adapter);
     }
 
-    private void loadDummyData() {
-        // 테스트용 더미 데이터 생성
-        List<User> userList = new ArrayList<>();
+    private void setupObservers() {
+        viewModel.getRankings().observe(getViewLifecycleOwner(), rankings -> {
+            if (rankings != null) {
+                adapter.submitList(rankings);
+                boolean isEmpty = rankings.isEmpty();
+                recyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+                emptyView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+                DevLog.d("RankingFragment", "랭킹 목록 업데이트: " + rankings.size() + "개");
+            }
+        });
 
-        User user1 = new User();
-        user1.setUsername("에코맘");
-        user1.setRecycleCount(247);
-        userList.add(user1);
+        viewModel.getTotalRecycleCount().observe(getViewLifecycleOwner(), count -> {
+            if (count != null) {
+                textTotalUsers.setText(String.format("%,d", count));
+            }
+        });
 
-        User user2 = new User();
-        user2.setUsername("지구지키미");
-        user2.setRecycleCount(235);
-        userList.add(user2);
+        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
+            progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+            if (isLoading) {
+                recyclerView.setVisibility(View.GONE);
+                emptyView.setVisibility(View.GONE);
+            }
+        });
 
-        User user3 = new User();
-        user3.setUsername("그린워커");
-        user3.setRecycleCount(218);
-        userList.add(user3);
-
-        User user4 = new User();
-        user4.setUsername("환경나무");
-        user4.setRecycleCount(199);
-        userList.add(user4);
-
-        User user5 = new User();
-        user5.setUsername("제로웨이스터");
-        user5.setRecycleCount(187);
-        userList.add(user5);
-
-        User user6 = new User();
-        user6.setUsername("분리수거왕");
-        user6.setRecycleCount(176);
-        userList.add(user6);
-
-        User user7 = new User();
-        user7.setUsername("친환경삶");
-        user7.setRecycleCount(164);
-        userList.add(user7);
-
-        User user8 = new User();
-        user8.setUsername("그린라이프");
-        user8.setRecycleCount(159);
-        userList.add(user8);
-
-        User user9 = new User();
-        user9.setUsername("제로웨이스트");
-        user9.setRecycleCount(148);
-        userList.add(user9);
-
-        User user10 = new User();
-        user10.setUsername("에코프렌즈");
-        user10.setRecycleCount(137);
-        userList.add(user10);
-
-        // 어댑터에 데이터 설정
-        adapter.setUserList(userList);
+        viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
+            if (error != null) {
+                DevLog.e("RankingFragment", "에러 발생: " + error);
+                // TODO: 에러 메시지 표시
+            }
+        });
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        binding = null;
+    private void loadRankings() {
+        String token = userManager.getToken();
+        if (token != null) {
+            viewModel.loadRankings(token);
+        } else {
+            DevLog.e("RankingFragment", "토큰이 없습니다");
+            // TODO: 로그인 화면으로 이동
+        }
     }
 }
