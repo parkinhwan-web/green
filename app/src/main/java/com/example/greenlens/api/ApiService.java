@@ -84,12 +84,6 @@ public interface ApiService {
     Call<List<Point>> getPointHistory(
             @Header("Authorization") String token);
 
-    // 분리수거 활동 기록 API
-    @POST("recycle/log")
-    Call<Map<String, Object>> logRecycleActivity(
-            @Header("Authorization") String token,
-            @Body Map<String, Object> logData);
-
     // 분리수거 활동 조회 API
     @GET("recycle/logs")
     Call<List<Map<String, Object>>> getRecycleActivities(

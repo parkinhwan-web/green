@@ -72,7 +72,7 @@
                 android:id="@+id/text_earned_point"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="100P"
+                android:text="1000P"
                 android:textSize="14sp"
                 android:layout_marginStart="2dp"
                 style="@style/TextTitle"/>
@@ -113,7 +113,7 @@
                 android:id="@+id/text_total_point"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="510P"
+                android:text="0P"
                 android:textSize="14sp"
                 android:layout_marginStart="2dp"
                 style="@style/TextTitle"/>

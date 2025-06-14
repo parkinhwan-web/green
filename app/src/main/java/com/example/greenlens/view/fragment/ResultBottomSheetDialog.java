@@ -59,7 +59,7 @@ public class ResultBottomSheetDialog extends BottomSheetDialogFragment {
         ImageView iconView = view.findViewById(R.id.ivResultIcon);
         TextView titleView = view.findViewById(R.id.tvResultTitle);
         TextView descView = view.findViewById(R.id.tvResultDescription);
-        ImageView arrowIcon = view.findViewById(R.id.ivArrow);
+        ImageView moreIcon = view.findViewById(R.id.btn_more);
 
         setupResultView(type, iconView, titleView, descView);
 
@@ -68,15 +68,13 @@ public class ResultBottomSheetDialog extends BottomSheetDialogFragment {
             descView.setText(disposalMethod);
         }
 
-        // 화살표 아이콘 클릭 시 해당 재활용 방법 화면으로 이동
-        arrowIcon.setOnClickListener(v -> {
-            navigateToRecycleGuide(type);
-        });
+        // 더보기 아이콘에만 리스너 연결 (null 체크)
+        if (moreIcon != null) {
+            moreIcon.setOnClickListener(v -> navigateToRecycleGuide(type));
+        }
 
         // 전체 뷰 클릭 시에도 이동할 수 있도록 설정
-        view.setOnClickListener(v -> {
-            navigateToRecycleGuide(type);
-        });
+        view.setOnClickListener(v -> navigateToRecycleGuide(type));
     }
 
     private void setupResultView(String type, ImageView iconView,
@@ -86,7 +84,7 @@ public class ResultBottomSheetDialog extends BottomSheetDialogFragment {
                 iconView.setImageResource(R.drawable.ic_plastic_detail);
                 titleView.setText("페트병");
                 descView.setText("무색 투명한 먹는샘물, 음료\n폴리에틸렌테레프탈레이트(PET)병");
-                // 페트병은 플라스틱으로 처리
+                // 페트병은 플라스틱으로 처리하되, 화면에는 "페트병"으로 표시
                 type = "plastic";
                 break;
             case "plastic":
@@ -123,13 +121,11 @@ public class ResultBottomSheetDialog extends BottomSheetDialogFragment {
     }
 
     private void navigateToRecycleGuide(String type) {
-        if (getActivity() instanceof MainActivity) {
-            NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment);
-
-            HomeFragmentDirections.ActionHomeFragmentToRecycleGuideFragment action =
-                    HomeFragmentDirections.actionHomeFragmentToRecycleGuideFragment(type);
-
-            navController.navigate(action);
+        if (getActivity() instanceof com.example.greenlens.view.CameraActivity) {
+            android.content.Intent intent = new android.content.Intent();
+            intent.putExtra("guide_type", type);
+            getActivity().setResult(android.app.Activity.RESULT_OK, intent);
+            getActivity().finish();
         }
         dismiss();
     }

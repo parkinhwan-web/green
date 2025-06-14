@@ -1,5 +1,6 @@
 package com.example.greenlens.view.adapter;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.greenlens.R;
 import com.example.greenlens.model.Coupon;
+import com.example.greenlens.view.ShopDetailActivity;
 import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;

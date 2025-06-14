@@ -18,6 +18,9 @@ public class AnalysisResultResponse {
     @SerializedName("created_at")
     private String createdAt;
 
+    @SerializedName("message")
+    private String message;
+
     public Long getAnalysisId() {
         return analysisId;
     }
@@ -58,11 +61,18 @@ public class AnalysisResultResponse {
         this.createdAt = createdAt;
     }
 
+    public String getMessage() {
+        return message;
+    }
+
     // 서버 응답의 category를 앱에서 사용하는 type으로 변환
     public String getTypeForApp() {
         if (category == null) return "plastic";
 
         switch (category.toLowerCase()) {
+            case "페트병":
+            case "pet":
+                return "pet";
             case "플라스틱":
             case "plastic":
                 return "plastic";

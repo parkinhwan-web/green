@@ -86,15 +86,25 @@ public class PointHistoryAdapter extends ListAdapter<Map<String, Object>, PointH
                 }
 
                 // 포인트 설정
-                Integer pointsEarned = (Integer) history.get("pointsEarned");
-                Integer totalPoints = (Integer) history.get("totalPoints");
-
-                if (pointsEarned != null) {
-                    textEarnedPoint.setText(String.format("%dP", pointsEarned));
-                }
-                if (totalPoints != null) {
+                Object totalPointsObj = history.get("totalPoints");
+                if (totalPointsObj != null) {
+                    long totalPoints;
+                    if (totalPointsObj instanceof Integer) {
+                        totalPoints = ((Integer) totalPointsObj).longValue();
+                    } else if (totalPointsObj instanceof Long) {
+                        totalPoints = (Long) totalPointsObj;
+                    } else if (totalPointsObj instanceof Double) {
+                        totalPoints = ((Double) totalPointsObj).longValue();
+                    } else {
+                        totalPoints = 0;
+                    }
                     textTotalPoint.setText(String.format("%dP", totalPoints));
+                } else {
+                    textTotalPoint.setText("0P");
                 }
+
+                // 적립 포인트는 항상 100P로 표시
+                textEarnedPoint.setText("1000P");
 
             } catch (Exception e) {
                 DevLog.e("PointHistoryAdapter", "데이터 바인딩 중 오류 발생", e);

@@ -310,8 +310,7 @@ public class CameraActivity extends AppCompatActivity {
             DevLog.d(TAG, "Camera result received");
             if (currentPhotoFile != null && currentPhotoFile.exists()) {
                 DevLog.d(TAG, "Photo file exists at: " + currentPhotoFile.getAbsolutePath());
-                binding.progressBar.setVisibility(View.VISIBLE);
-                analyzeImage();
+                showCapturedImage();  // analyzeImage() 대신 showCapturedImage() 호출
             } else {
                 DevLog.e(TAG, "Photo file is null or does not exist");
                 Toast.makeText(this, "이미지 파일을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
@@ -440,13 +439,23 @@ public class CameraActivity extends AppCompatActivity {
                     binding.progressBar.setVisibility(View.GONE);
                     if (response.isSuccessful() && response.body() != null) {
                         AnalyzeResponse analyzeResponse = response.body();
+                        String message = analyzeResponse.getMessage();
+                        if (message != null && message.contains("보상 한도")) {
+                            new androidx.appcompat.app.AlertDialog.Builder(CameraActivity.this)
+                                    .setTitle("일일 분석 제한")
+                                    .setMessage(message + "\n내일 다시 시도해 주세요.")
+                                    .setPositiveButton("확인", (dialog, which) -> finish())
+                                    .setCancelable(false)
+                                    .show();
+                            return;
+                        }
                         Long analysisId = analyzeResponse.getAnalysisId();
-                        DevLog.d(TAG, "Analysis ID received: " + analysisId);
-
-                        // 분석이 완료될 때까지 잠시 대기
-                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                            getAnalysisResult(analysisId);
-                        }, 2000); // 2초 후 결과 조회
+                        if (analysisId != null) {
+                            // 분석이 완료될 때까지 잠시 대기 후 결과 조회
+                            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                getAnalysisResult(analysisId);
+                            }, 2000); // 2초 후 결과 조회
+                        }
                     } else {
                         DevLog.e(TAG, "API call failed with code: " + response.code());
                         DevLog.e(TAG, "Response headers: " + response.headers());
@@ -553,13 +562,12 @@ public class CameraActivity extends AppCompatActivity {
                     String disposalMethod = result.getDisposalMethod();
                     String type = result.getTypeForApp();
 
-                    // 분석 결과가 있으면 포인트 적립
-                    if (type != null && !type.isEmpty()) {
-                        // 분리수거 활동 기록 및 포인트 적립
-                        addUserPoints(analysisId, type, disposalMethod);
-                        showResult(type, disposalMethod);
+                    // type을 카테고리별 프래그먼트에 맞게 매핑
+                    String mappedType = mapTypeForGuide(type);
+
+                    if (mappedType != null && !mappedType.isEmpty()) {
+                        showResult(mappedType, disposalMethod);
                     } else {
-                        // 타입이 없는 경우
                         Toast.makeText(CameraActivity.this,
                                 "분석 결과를 확인할 수 없습니다. 다시 시도해주세요.",
                                 Toast.LENGTH_SHORT).show();
@@ -584,85 +592,6 @@ public class CameraActivity extends AppCompatActivity {
                 showRetryDialog();
             }
         });
-    }
-
-    /**
-     * 사용자 포인트를 적립하는 함수
-     * @param analysisId 분석 ID
-     * @param wasteType 분리수거한 쓰레기 종류
-     * @param disposalMethod 분리수거 방법
-     */
-    private void addUserPoints(Long analysisId, String wasteType, String disposalMethod) {
-        if (userManager == null || !userManager.isLoggedIn()) {
-            DevLog.e(TAG, "포인트 적립 실패: 사용자가 로그인되어 있지 않습니다.");
-            return;
-        }
-
-        User currentUser = userManager.getCurrentUser();
-        if (currentUser == null || currentUser.getUserId() == null) {
-            DevLog.e(TAG, "포인트 적립 실패: 사용자 정보가 없습니다.");
-            return;
-        }
-
-        Map<String, Object> pointData = new HashMap<>();
-        pointData.put("analysis_id", analysisId);
-        pointData.put("disposal_category", wasteType);
-        pointData.put("disposal_method", disposalMethod);
-        pointData.put("points", 100); // 기본 포인트 100점
-
-        apiService.logRecycleActivity(authToken, pointData).enqueue(new Callback<Map<String, Object>>() {
-            @Override
-            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Map<String, Object> result = response.body();
-                    boolean success = (boolean) result.get("success");
-                    if (success) {
-                        DevLog.d(TAG, "포인트 적립 성공: 100P");
-                        // 포인트 내역 업데이트를 위해 사용자 정보 새로고침
-                        userManager.getUserRepository().fetchUserProfile(userManager.getToken(), new UserRepository.UserProfileCallback() {
-                            @Override
-                            public void onSuccess(User user) {
-                                DevLog.d(TAG, "사용자 정보 업데이트 성공");
-                            }
-
-                            @Override
-                            public void onError(String message) {
-                                DevLog.e(TAG, "사용자 정보 업데이트 실패: " + message);
-                            }
-                        });
-                    } else {
-                        DevLog.e(TAG, "포인트 적립 실패: " + result.get("message"));
-                    }
-                } else {
-                    DevLog.e(TAG, "포인트 적립 API 호출 실패: " + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
-                DevLog.e(TAG, "포인트 적립 네트워크 오류", t);
-            }
-        });
-    }
-
-    // 쓰레기 유형을 한글로 변환
-    private String getWasteTypeKorean(String wasteType) {
-        switch (wasteType != null ? wasteType.toLowerCase() : "") {
-            case "plastic":
-                return "플라스틱";
-            case "paper":
-                return "종이";
-            case "glass":
-                return "유리";
-            case "metal":
-                return "금속";
-            case "vinyl":
-                return "비닐";
-            case "styrofoam":
-                return "스티로폼";
-            default:
-                return wasteType;
-        }
     }
 
     private void showResult(String type) {
@@ -748,6 +677,35 @@ public class CameraActivity extends AppCompatActivity {
         } catch (OutOfMemoryError e) {
             DevLog.e(TAG, "이미지 압축 중 메모리 부족", e);
             return null;
+        }
+    }
+
+    // type 매핑 함수 추가
+    private String mapTypeForGuide(String type) {
+        if (type == null) return null;
+        switch (type.toLowerCase()) {
+            case "플라스틱":
+            case "plastic":
+            case "페트병":
+            case "pet":
+                return "plastic";
+            case "캔":
+            case "metal":
+                return "metal";
+            case "종이":
+            case "paper":
+                return "paper";
+            case "비닐":
+            case "vinyl":
+                return "vinyl";
+            case "유리병":
+            case "glass":
+                return "glass";
+            case "스티로폼":
+            case "styrofoam":
+                return "styrofoam";
+            default:
+                return null;
         }
     }
 }

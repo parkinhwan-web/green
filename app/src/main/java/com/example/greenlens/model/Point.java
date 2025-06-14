@@ -1,52 +1,105 @@
 // model/Point.java
 package com.example.greenlens.model;
-import java.util.List;
+
+import com.google.gson.annotations.SerializedName;
 
 public class Point {
-    private String date;
+    @SerializedName("logId")
+    private Long logId;
+
+    @SerializedName("analysisId")
+    private Long analysisId;
+
+    @SerializedName("category")
     private String category;
-    private int earnedPoints;
+
+    @SerializedName("disposalCategory")
+    private String disposalCategory;
+
+    @SerializedName("disposalMethod")
+    private String disposalMethod;
+
+    @SerializedName("createdAt")
+    private String createdAt;
+
+    @SerializedName("totalPoints")
     private int totalPoints;
 
-    public Point() {
+    @SerializedName("recycleCount")
+    private int recycleCount;
+
+    @SerializedName("message")
+    private String message;
+
+    public Long getLogId() {
+        return logId;
     }
 
-    public Point(String date, String category, int earnedPoints, int totalPoints) {
-        this.date = date;
-        this.category = category;
-        this.earnedPoints = earnedPoints;
-        this.totalPoints = totalPoints;
-    }
-
-    public String getDate() {
-        return date;
+    public Long getAnalysisId() {
+        return analysisId;
     }
 
     public String getCategory() {
         return category;
     }
 
-    public int getEarnedPoints() {
-        return earnedPoints;
+    public String getDisposalCategory() {
+        return disposalCategory;
+    }
+
+    public String getDisposalMethod() {
+        return disposalMethod;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
     }
 
     public int getTotalPoints() {
         return totalPoints;
     }
 
-    public void setDate(String date) {
-        this.date = date;
+    public int getRecycleCount() {
+        return recycleCount;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setLogId(Long logId) {
+        this.logId = logId;
+    }
+
+    public void setAnalysisId(Long analysisId) {
+        this.analysisId = analysisId;
     }
 
     public void setCategory(String category) {
         this.category = category;
     }
 
-    public void setEarnedPoints(int earnedPoints) {
-        this.earnedPoints = earnedPoints;
+    public void setDisposalCategory(String disposalCategory) {
+        this.disposalCategory = disposalCategory;
+    }
+
+    public void setDisposalMethod(String disposalMethod) {
+        this.disposalMethod = disposalMethod;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
     }
 
     public void setTotalPoints(int totalPoints) {
         this.totalPoints = totalPoints;
+    }
+
+    public void setRecycleCount(int recycleCount) {
+        this.recycleCount = recycleCount;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

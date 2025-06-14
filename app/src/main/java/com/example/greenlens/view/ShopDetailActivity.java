@@ -110,16 +110,22 @@ public class ShopDetailActivity extends AppCompatActivity {
             // 사용자 포인트 확인
             User user = userManager.getCurrentUser();
             if (user != null) {
-                int userPoints = user.getPoints();
-
-                if (userPoints >= coupon.getPoints()) {
-                    // 구매 확인 다이얼로그 표시
-                    showPurchaseConfirmDialog(userPoints);
+                // 스타벅스 아메리카노와 ABC 초코쿠키쿠앤크만 구매 가능
+                if ((coupon.getBrandName().equals("스타벅스") && coupon.getProductName().equals("아메리카노")) ||
+                        (coupon.getBrandName().equals("CU") && coupon.getProductName().equals("ABC초코쿠키쿠앤크"))) {
+                    int userPoints = user.getPoints();
+                    if (userPoints >= coupon.getPoints()) {
+                        // 구매 확인 다이얼로그 표시
+                        showPurchaseConfirmDialog(userPoints);
+                    } else {
+                        // 포인트 부족 메시지
+                        Toast.makeText(this,
+                                "포인트가 부족합니다. 현재 보유 포인트: " + userPoints + "P",
+                                Toast.LENGTH_SHORT).show();
+                    }
                 } else {
-                    // 포인트 부족 메시지
-                    Toast.makeText(this,
-                            "포인트가 부족합니다. 현재 보유 포인트: " + userPoints + "P",
-                            Toast.LENGTH_SHORT).show();
+                    // 다른 상품권은 구현중 메시지 표시
+                    Toast.makeText(this, "구현중입니다.", Toast.LENGTH_SHORT).show();
                 }
             } else {
                 // 로그인 필요 메시지

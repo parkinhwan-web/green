@@ -176,11 +176,6 @@ public class ShopFragment extends Fragment {
             intent.putExtra("IMAGE_RES_ID", coupon.getImageResId());
             intent.putExtra("EXPIRE_DATE", coupon.getExpireDate());
             startActivity(intent);
-
-            // 디버깅용 토스트 메시지
-            Toast.makeText(requireContext(),
-                    coupon.getProductName() + " 상세 페이지로 이동합니다.",
-                    Toast.LENGTH_SHORT).show();
         });
     }
 
