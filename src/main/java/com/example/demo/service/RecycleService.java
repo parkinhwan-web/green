@@ -261,6 +261,9 @@ public class RecycleService {
                 resultInfo.put("points_rewarded", 0);
                 resultInfo.put("message", "하루 보상 한도를 초과하여 포인트가 지급되지 않았습니다.");
             }
+            resultInfo.put("category", category);
+            resultInfo.put("confidence", confidence);
+            resultInfo.put("disposal_method", disposalMethod);
 
             resultInfo.put("remaining_reward_count", Math.max(0, DAILY_ANALYSIS_LIMIT - todayAiCount.intValue()));
             resultInfo.put("analysis_id", analysisId);
