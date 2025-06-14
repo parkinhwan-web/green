@@ -71,17 +71,20 @@ public class RecycleService {
 
         RecycleLog saved = recycleLogRepository.save(log);
 
-        // int pointsEarned = 50;
+        // 포인트 지급 로직
+        int pointsEarned = 100;  // 또는 일일 제한/분석 횟수 체크 후 결정
 
+        // 기존 포인트 조회 or 새로 생성
         Point point = pointRepository.findByUserId(userId)
-                .orElseGet(() -> {
-                    Point p = new Point();
-                    p.setUser(user);
-                    p.setPoints(0);
-                    return p;
-                });
-        // point.setPoints(point.getPoints() + pointsEarned);
-        point.setPoints(point.getPoints());
+            .orElseGet(() -> {
+                Point p = new Point();
+                p.setUser(user);
+                p.setPoints(0);
+                return p;
+            });
+
+        // 포인트 누적 지급
+        point.setPoints(point.getPoints() + pointsEarned);
         point.setUpdatedAt(ZonedDateTime.now());
         pointRepository.save(point);
 
