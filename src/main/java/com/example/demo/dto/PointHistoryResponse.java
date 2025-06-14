@@ -13,7 +13,7 @@ public class PointHistoryResponse {
     private ZonedDateTime date;
     private String type;
     private String reason;
-    private String brandName; // 또는 wasteTypeKorean
+    private String brandName;
     private int points;
     private int balance;
 
