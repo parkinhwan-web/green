@@ -53,9 +53,9 @@ public class RecycleService {
     private final PointRepository pointRepository;
     private final PointHistoryRepository pointHistoryRepository;
     private final UserRepository userRepository;
-    private static final int DAILY_POINT_LIMIT = 50;
-    private static final int DAILY_ANALYSIS_LIMIT = 5;
-    private static final int ANALYSIS_REWARD = 10;
+    // private static final int DAILY_POINT_LIMIT = 50;
+    // private static final int DAILY_ANALYSIS_LIMIT = 5;
+    // private static final int ANALYSIS_REWARD = 10;
 
 
     @Transactional
@@ -71,7 +71,7 @@ public class RecycleService {
 
         RecycleLog saved = recycleLogRepository.save(log);
 
-        int pointsEarned = 50;
+        // int pointsEarned = 50;
 
         Point point = pointRepository.findByUserId(userId)
                 .orElseGet(() -> {
@@ -80,7 +80,8 @@ public class RecycleService {
                     p.setPoints(0);
                     return p;
                 });
-        point.setPoints(point.getPoints() + pointsEarned);
+        // point.setPoints(point.getPoints() + pointsEarned);
+        point.setPoints(point.getPoints());
         point.setUpdatedAt(ZonedDateTime.now());
         pointRepository.save(point);
 
@@ -214,9 +215,9 @@ public class RecycleService {
                     .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
             // 6️⃣ 포인트 제한 체크
-            final int DAILY_POINT_LIMIT = 3000;
+            final int DAILY_POINT_LIMIT = 300;
             final int DAILY_ANALYSIS_LIMIT = 3;
-            final int ANALYSIS_REWARD = 1000;
+            final int ANALYSIS_REWARD = 100;
 
             Long todayTotalPoints = pointHistoryRepository.getTodayTotalEarnedPoints(userId);
             if (todayTotalPoints == null) todayTotalPoints = 0L;
@@ -280,32 +281,32 @@ public class RecycleService {
         return resultInfo;
     }
 
-    private String runPythonScript(String imgPath) {
-        ProcessBuilder pb = new ProcessBuilder(
-                pythonExe,
-                scriptPath,
-                "--image", imgPath
-        );
-        pb.redirectErrorStream(true);
+    // private String runPythonScript(String imgPath) {
+    //     ProcessBuilder pb = new ProcessBuilder(
+    //             pythonExe,
+    //             scriptPath,
+    //             "--image", imgPath
+    //     );
+    //     pb.redirectErrorStream(true);
 
-        try {
-            Process proc = pb.start();
-            String output;
-            try (BufferedReader br = new BufferedReader(
-                    new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
-                output = br.lines().collect(Collectors.joining("\n"));
-            }
-            int exit = proc.waitFor();
-            log.info("PYTHON exit={} cmd={}", exit, pb.command());
+    //     try {
+    //         Process proc = pb.start();
+    //         String output;
+    //         try (BufferedReader br = new BufferedReader(
+    //                 new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
+    //             output = br.lines().collect(Collectors.joining("\n"));
+    //         }
+    //         int exit = proc.waitFor();
+    //         log.info("PYTHON exit={} cmd={}", exit, pb.command());
 
-            if (exit != 0) {
-                return "error: script failed with exit code " + exit + "\n" + output;
-            }
-            return output;
-        } catch (IOException | InterruptedException e) {
-            return "error:" + e.getMessage();
-        }
-    }
+    //         if (exit != 0) {
+    //             return "error: script failed with exit code " + exit + "\n" + output;
+    //         }
+    //         return output;
+    //     } catch (IOException | InterruptedException e) {
+    //         return "error:" + e.getMessage();
+    //     }
+    // }
 
     public List<RecycleLogResponse> getLogsByUser(Long userId) {
     List<RecycleLog> logs = recycleLogRepository.findByUserId(userId);
