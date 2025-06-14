@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.PointHistoryResponse;
+import com.example.demo.dto.PointResponse;
 import com.example.demo.entity.Point;
 import com.example.demo.security.CustomUserDetails;
 import com.example.demo.service.PointHistoryService;
@@ -24,10 +25,17 @@ public class PointController {
     /** 🔹 현재 포인트 조회 */
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Point> getMyPoint(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<PointResponse> getMyPoint(@AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails.getUser().getId();
         Point point = pointService.getUserPointInfo(userId);
-        return ResponseEntity.ok(point);
+
+        PointResponse response = PointResponse.builder()
+                .userId(userId)
+                .points(point.getPoints())
+                .updatedAt(point.getUpdatedAt())
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 
     /** 🔹 포인트 내역 전체 조회 */
