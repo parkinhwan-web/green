@@ -104,7 +104,7 @@ public class PointHistoryAdapter extends ListAdapter<Map<String, Object>, PointH
                 }
 
                 // 적립 포인트는 항상 100P로 표시
-                textEarnedPoint.setText("1000P");
+                textEarnedPoint.setText("100P");
 
             } catch (Exception e) {
                 DevLog.e("PointHistoryAdapter", "데이터 바인딩 중 오류 발생", e);
