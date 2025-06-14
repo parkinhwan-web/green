@@ -418,43 +418,63 @@ public class CameraActivity extends AppCompatActivity {
                 return;
             }
 
+            // 파일명 영문, .jpg로 보장
+            String fileName = compressedFile.getName();
+            if (!fileName.toLowerCase().endsWith(".jpg")) {
+                fileName = fileName + ".jpg";
+            }
+            // 파일명에 한글/공백/특수문자 제거 (영문, 숫자, 언더스코어만 허용)
+            fileName = fileName.replaceAll("[^A-Za-z0-9_.]", "_");
+
             DevLog.d(TAG, "Compressed file size: " + compressedFile.length() + " bytes");
             DevLog.d(TAG, "Compressed file path: " + compressedFile.getAbsolutePath());
+            DevLog.d(TAG, "Upload file name: " + fileName);
 
-            // Multipart 요청 생성
+            // Multipart 요청 생성 (필드명 'image', 파일명 영문, Content-Type 'image/jpeg')
             RequestBody requestFile = RequestBody.create(MediaType.parse("image/jpeg"), compressedFile);
-            MultipartBody.Part body = MultipartBody.Part.createFormData("image", compressedFile.getName(), requestFile);
+            MultipartBody.Part body = MultipartBody.Part.createFormData("image", fileName, requestFile);
+
+            // Authorization 헤더 'Bearer <token>'이 정확히 한 번만 붙도록 보장
+            String finalAuthToken = authToken;
+            if (!finalAuthToken.startsWith("Bearer ")) {
+                finalAuthToken = "Bearer " + finalAuthToken;
+            }
+            if (finalAuthToken.startsWith("Bearer Bearer ")) {
+                finalAuthToken = finalAuthToken.replaceFirst("Bearer ", "");
+                finalAuthToken = "Bearer " + finalAuthToken;
+            }
+            DevLog.d(TAG, "최종 Authorization 헤더: " + finalAuthToken);
 
             // API 호출
-            if (authToken == null || authToken.isEmpty()) {
-                DevLog.e(TAG, "Auth token is null or empty");
-                Toast.makeText(this, "인증 토큰이 없습니다. 다시 로그인해주세요.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            DevLog.d(TAG, "Sending image to server... Size: " + compressedFile.length() + " bytes");
-            apiService.analyzeImageMultipart(authToken, body).enqueue(new Callback<AnalyzeResponse>() {
+            DevLog.d(TAG, "Sending image to server... Size: " + compressedFile.length() + " bytes, Name: " + fileName);
+            apiService.analyzeImageMultipart(finalAuthToken, body).enqueue(new Callback<AnalyzeResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<AnalyzeResponse> call, @NonNull Response<AnalyzeResponse> response) {
                     binding.progressBar.setVisibility(View.GONE);
                     if (response.isSuccessful() && response.body() != null) {
                         AnalyzeResponse analyzeResponse = response.body();
                         String message = analyzeResponse.getMessage();
-                        if (message != null && message.contains("보상 한도")) {
+                        Long analysisId = analyzeResponse.getAnalysisId();
+                        // message가 있으면 먼저 다이얼로그로 띄움
+                        if (message != null && !message.isEmpty()) {
                             new androidx.appcompat.app.AlertDialog.Builder(CameraActivity.this)
-                                    .setTitle("일일 분석 제한")
-                                    .setMessage(message + "\n내일 다시 시도해 주세요.")
-                                    .setPositiveButton("확인", (dialog, which) -> finish())
+                                    .setTitle("알림")
+                                    .setMessage(message)
+                                    .setPositiveButton("확인", (dialog, which) -> {
+                                        // 확인 누르면 결과창 띄우기
+                                        if (analysisId != null) {
+                                            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                                getAnalysisResult(analysisId);
+                                            }, 2000);
+                                        }
+                                    })
                                     .setCancelable(false)
                                     .show();
-                            return;
-                        }
-                        Long analysisId = analyzeResponse.getAnalysisId();
-                        if (analysisId != null) {
-                            // 분석이 완료될 때까지 잠시 대기 후 결과 조회
+                        } else if (analysisId != null) {
+                            // 메시지가 없으면 바로 결과창 띄우기
                             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                                 getAnalysisResult(analysisId);
-                            }, 2000); // 2초 후 결과 조회
+                            }, 2000);
                         }
                     } else {
                         DevLog.e(TAG, "API call failed with code: " + response.code());
@@ -552,7 +572,17 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     private void getAnalysisResult(Long analysisId) {
-        apiService.getAnalysisResult(authToken, analysisId).enqueue(new Callback<AnalysisResultResponse>() {
+        // Authorization 헤더 'Bearer <token>'이 정확히 한 번만 붙도록 보장
+        String finalAuthToken = authToken;
+        if (!finalAuthToken.startsWith("Bearer ")) {
+            finalAuthToken = "Bearer " + finalAuthToken;
+        }
+        if (finalAuthToken.startsWith("Bearer Bearer ")) {
+            finalAuthToken = finalAuthToken.replaceFirst("Bearer ", "");
+            finalAuthToken = "Bearer " + finalAuthToken;
+        }
+        DevLog.d(TAG, "[getAnalysisResult] 최종 Authorization 헤더: " + finalAuthToken);
+        apiService.getAnalysisResult(finalAuthToken, analysisId).enqueue(new Callback<AnalysisResultResponse>() {
             @Override
             public void onResponse(Call<AnalysisResultResponse> call, Response<AnalysisResultResponse> response) {
                 binding.progressBar.setVisibility(View.GONE);
@@ -562,12 +592,11 @@ public class CameraActivity extends AppCompatActivity {
                     String disposalMethod = result.getDisposalMethod();
                     String type = result.getTypeForApp();
 
-                    // type을 카테고리별 프래그먼트에 맞게 매핑
-                    String mappedType = mapTypeForGuide(type);
-
-                    if (mappedType != null && !mappedType.isEmpty()) {
-                        showResult(mappedType, disposalMethod);
+                    // 분석 결과가 있으면 결과창만 띄움 (포인트 적립/분리수거 기록 API 호출 X)
+                    if (type != null && !type.isEmpty()) {
+                        showResult(type, disposalMethod);
                     } else {
+                        // 타입이 없는 경우
                         Toast.makeText(CameraActivity.this,
                                 "분석 결과를 확인할 수 없습니다. 다시 시도해주세요.",
                                 Toast.LENGTH_SHORT).show();
@@ -601,6 +630,17 @@ public class CameraActivity extends AppCompatActivity {
     private void showResult(String type, String disposalMethod) {
         ResultBottomSheetDialog bottomSheet = ResultBottomSheetDialog.newInstance(type, disposalMethod);
         bottomSheet.show(getSupportFragmentManager(), "result_bottom_sheet");
+        // 결과창이 닫힐 때(뒤로가기 등) 촬영화면으로 전환
+        getSupportFragmentManager().executePendingTransactions();
+        bottomSheet.getDialog().setOnDismissListener(dialog -> {
+            // 촬영화면(카메라 프리뷰)로 전환
+            binding.viewFinder.setVisibility(View.VISIBLE);
+            binding.capturedImageView.setVisibility(View.GONE);
+            binding.btnCapture.setVisibility(View.VISIBLE);
+            binding.btnRetake.setVisibility(View.GONE);
+            binding.btnConfirm.setVisibility(View.GONE);
+            startCamera();
+        });
     }
 
     @Override
