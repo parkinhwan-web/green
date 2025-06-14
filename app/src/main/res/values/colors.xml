@@ -28,4 +28,5 @@
     <color name="status_bar_dark_green">#004D2A</color>
     <color name="status_bar_teal">#00796B</color>
     <color name="status_bar_color">#1B5E20</color>
+    <color name="red">#FF0000</color>
 </resources>

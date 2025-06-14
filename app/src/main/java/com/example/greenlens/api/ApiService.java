@@ -81,8 +81,10 @@ public interface ApiService {
 
     // 포인트 내역 조회 API
     @GET("users/{user_id}/points/history")
-    Call<List<Point>> getPointHistory(
-            @Header("Authorization") String token);
+    Call<List<Map<String, Object>>> getPointHistory(
+            @Header("Authorization") String token,
+            @Path("user_id") Long userId
+    );
 
     // 분리수거 활동 조회 API
     @GET("recycle/logs")

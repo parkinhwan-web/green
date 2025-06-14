@@ -296,23 +296,12 @@ public class UserManager {
         DevLog.d(TAG, "=== 인증 토큰 생성 ===");
         DevLog.d(TAG, "저장된 원본 토큰: " + token);
 
-        // API 호출에 사용할 인증 토큰 반환 (Bearer 접두사 포함)
+        // API 호출에 사용할 인증 토큰 반환 (Bearer 접두사 없이 순수 토큰만 반환)
         if (token == null || token.isEmpty()) {
             DevLog.e(TAG, "저장된 토큰이 null 또는 비어있음");
             return null;
         }
-
-        String authToken;
-        if (token.startsWith("Bearer ")) {
-            authToken = token;
-            DevLog.d(TAG, "이미 Bearer 접두사가 있음");
-        } else {
-            authToken = "Bearer " + token;
-            DevLog.d(TAG, "Bearer 접두사 추가됨");
-        }
-
-        DevLog.d(TAG, "최종 인증 토큰: " + authToken);
-        return authToken;
+        return token;
     }
 
     public void clearUserSession() {

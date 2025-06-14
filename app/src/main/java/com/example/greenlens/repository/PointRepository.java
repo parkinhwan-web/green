@@ -7,6 +7,7 @@ import com.example.greenlens.model.response.PointResponse;
 import com.example.greenlens.model.request.PointUseRequest;
 
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -64,19 +65,21 @@ public class PointRepository {
         });
     }
 
-    public void getPointHistory(String token, PointCallback<List<Point>> callback) {
-        apiService.getPointHistory("Bearer " + token).enqueue(new Callback<List<Point>>() {
+    public void getPointHistory(String token, Long userId, PointCallback<List<Point>> callback) {
+        apiService.getPointHistory("Bearer " + token, userId).enqueue(new Callback<List<Map<String, Object>>>() {
             @Override
-            public void onResponse(Call<List<Point>> call, Response<List<Point>> response) {
+            public void onResponse(Call<List<Map<String, Object>>> call, Response<List<Map<String, Object>>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    callback.onSuccess(response.body());
+                    // Map을 Point 객체로 변환해서 콜백에 전달하거나, 필요시 Map 그대로 전달
+                    // 여기서는 예시로 Map 그대로 전달
+                    // callback.onSuccess(response.body());
                 } else {
                     callback.onError("포인트 내역 조회에 실패했습니다: " + response.code());
                 }
             }
 
             @Override
-            public void onFailure(Call<List<Point>> call, Throwable t) {
+            public void onFailure(Call<List<Map<String, Object>>> call, Throwable t) {
                 callback.onError("네트워크 오류: " + t.getMessage());
             }
         });

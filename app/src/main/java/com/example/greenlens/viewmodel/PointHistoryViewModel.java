@@ -52,15 +52,18 @@ public class PointHistoryViewModel extends ViewModel {
         }
 
         String authToken = userManager.getAuthToken();
-        if (authToken == null || authToken.isEmpty()) {
+        Long userId = userManager.getCurrentUser() != null ? userManager.getCurrentUser().getUserId() : null;
+        if (authToken == null || authToken.isEmpty() || userId == null) {
             error.setValue("로그인 세션이 만료되었습니다.");
             return;
         }
+        // Bearer가 이미 붙어있으면 추가하지 않음
+        String finalToken = authToken.startsWith("Bearer ") ? authToken : "Bearer " + authToken;
 
         isLoading.setValue(true);
         DevLog.d(TAG, "포인트 내역 불러오기 시작...");
 
-        apiService.getRecycleActivities(authToken).enqueue(new Callback<List<Map<String, Object>>>() {
+        apiService.getPointHistory(finalToken, userId).enqueue(new Callback<List<Map<String, Object>>>() {
             @Override
             public void onResponse(Call<List<Map<String, Object>>> call, Response<List<Map<String, Object>>> response) {
                 isLoading.setValue(false);
@@ -68,19 +71,26 @@ public class PointHistoryViewModel extends ViewModel {
                     List<Map<String, Object>> history = response.body();
                     DevLog.d(TAG, "포인트 내역 응답 성공: " + history.size() + "개 항목");
 
-                    // category, disposalCategory가 모두 null인 항목은 제외
+                    // 적립(type=="적립")이면서 brandName==null인 항목은 제외
                     List<Map<String, Object>> filteredHistory = new ArrayList<>();
                     for (Map<String, Object> item : history) {
-                        String category = (String) item.get("category");
-                        String disposalCategory = (String) item.get("disposalCategory");
-                        if (category == null && disposalCategory == null) {
-                            // 아무것도 추가하지 않음 (제외)
+                        String type = (String) item.get("type");
+                        String brandName = (String) item.get("brandName");
+                        if ("적립".equals(type) && brandName == null) {
                             continue;
                         }
                         filteredHistory.add(item);
                     }
 
-                    Collections.reverse(filteredHistory); // 최신순 정렬
+                    // 날짜 기준 최신순(내림차순) 정렬
+                    filteredHistory.sort((a, b) -> {
+                        String dateA = (String) a.get("date");
+                        String dateB = (String) b.get("date");
+                        if (dateA == null) return 1;
+                        if (dateB == null) return -1;
+                        return dateB.compareTo(dateA); // 내림차순
+                    });
+
                     pointHistory.setValue(filteredHistory);
                     DevLog.d(TAG, "포인트 내역 " + filteredHistory.size() + "개 로드 완료");
                 } else {
