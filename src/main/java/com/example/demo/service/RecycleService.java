@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.nio.file.Path;
@@ -52,6 +53,10 @@ public class RecycleService {
     private final PointRepository pointRepository;
     private final PointHistoryRepository pointHistoryRepository;
     private final UserRepository userRepository;
+    private static final int DAILY_POINT_LIMIT = 50;
+    private static final int DAILY_ANALYSIS_LIMIT = 5;
+    private static final int ANALYSIS_REWARD = 10;
+
 
     @Transactional
     public RecycleLogResponse saveLog(RecycleLogRequest request, Long userId) {
@@ -162,11 +167,12 @@ public class RecycleService {
     private String aiApiUrl;
 
     @Transactional
-    public void analyzeAndSave(MultipartFile image, Long userId) {
+    public Map<String, Object> analyzeAndSave(MultipartFile image, Long userId) {
+        Map<String, Object> resultInfo = new HashMap<>();
         try {
-            Long analysisId = System.currentTimeMillis();  // millisecond 단위의 ID
+            Long analysisId = System.currentTimeMillis();  // millisecond 단위 ID
 
-            // 이미지 저장
+            // 1️⃣ 이미지 저장
             Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
             Files.createDirectories(uploadPath);
 
@@ -178,7 +184,7 @@ public class RecycleService {
             Path target = uploadPath.resolve(fileName);
             image.transferTo(target);
 
-            // 1️⃣ Python API에 HTTP 요청
+            // 2️⃣ Python API 호출
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -188,13 +194,13 @@ public class RecycleService {
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
             ResponseEntity<Map> response = restTemplate.postForEntity(aiApiUrl, requestEntity, Map.class);
 
-            // 2️⃣ 결과 파싱
+            // 3️⃣ 결과 파싱
             Map<String, Object> resultMap = response.getBody();
             String category = (String) resultMap.getOrDefault("category", "unknown");
             double confidence = Double.parseDouble(resultMap.getOrDefault("confidence", 0.0).toString());
             String disposalMethod = (String) resultMap.getOrDefault("disposal_method", "일반 쓰레기통에 버려주세요.");
 
-            // 3️⃣ DB 저장 및 포인트 지급
+            // 4️⃣ 분석 결과 저장
             RecycleAnalysisResult result = new RecycleAnalysisResult();
             result.setAnalysisId(analysisId);
             result.setCategory(category);
@@ -203,38 +209,66 @@ public class RecycleService {
             result.setCreatedAt(ZonedDateTime.now());
             recycleAnalysisResultRepository.save(result);
 
+            // 5️⃣ 유저 정보 조회
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-            Point point = pointRepository.findByUserId(userId)
-                    .orElseGet(() -> {
-                        Point p = new Point();
-                        p.setUser(user);
-                        p.setPoints(0);
-                        return p;
-                    });
+            // 6️⃣ 포인트 제한 체크
+            final int DAILY_POINT_LIMIT = 3000;
+            final int DAILY_ANALYSIS_LIMIT = 3;
+            final int ANALYSIS_REWARD = 1000;
 
-            point.setPoints(point.getPoints() + 1000);
-            point.setUpdatedAt(ZonedDateTime.now());
-            pointRepository.save(point);
+            Long todayTotalPoints = pointHistoryRepository.getTodayTotalEarnedPoints(userId);
+            if (todayTotalPoints == null) todayTotalPoints = 0L;
 
-            PointHistory history = new PointHistory();
-            history.setUser(user);
-            history.setDate(ZonedDateTime.now());
-            history.setType("적립");
-            history.setReason("AI 분석 리워드");
-            history.setWasteTypeKorean(category);
-            history.setPoints(1000);
-            history.setBalance(point.getPoints());
-            pointHistoryRepository.save(history);
+            Long todayAiCount = pointHistoryRepository.getTodayAiRewardCount(userId);
+            if (todayAiCount == null) todayAiCount = 0L;
 
-            // ✅ 분석 로그 저장
+            boolean canReward = todayTotalPoints + ANALYSIS_REWARD <= DAILY_POINT_LIMIT
+                    && todayAiCount < DAILY_ANALYSIS_LIMIT;
+
+            // 7️⃣ 포인트 지급
+            if (canReward) {
+                Point point = pointRepository.findByUserId(userId)
+                        .orElseGet(() -> {
+                            Point p = new Point();
+                            p.setUser(user);
+                            p.setPoints(0);
+                            return p;
+                        });
+
+                point.setPoints(point.getPoints() + ANALYSIS_REWARD);
+                point.setUpdatedAt(ZonedDateTime.now());
+                pointRepository.save(point);
+
+                PointHistory history = new PointHistory();
+                history.setUser(user);
+                history.setDate(ZonedDateTime.now());
+                history.setType("적립");
+                history.setReason("AI 분석 리워드");
+                history.setWasteTypeKorean(category);
+                history.setPoints(ANALYSIS_REWARD);
+                history.setBalance(point.getPoints());
+                pointHistoryRepository.save(history);
+
+                resultInfo.put("points_rewarded", ANALYSIS_REWARD);
+                resultInfo.put("message", "포인트가 지급되었습니다.");
+            } else {
+                resultInfo.put("points_rewarded", 0);
+                resultInfo.put("message", "하루 보상 한도를 초과하여 포인트가 지급되지 않았습니다.");
+            }
+
+            resultInfo.put("remaining_reward_count", Math.max(0, DAILY_ANALYSIS_LIMIT - todayAiCount.intValue()));
+            resultInfo.put("analysis_id", analysisId);
+            resultInfo.put("created_at", ZonedDateTime.now().toString());
+
+            // 8️⃣ 분석 로그 저장
             RecycleLog recycleLog = new RecycleLog();
-            recycleLog.setUser(user);  
+            recycleLog.setUser(user);
             recycleLog.setCategory(category);
             recycleLog.setDisposalCategory(category);
-            recycleLog.setDisposalMethod(disposalMethod);   
-            recycleLog.setAnalysisId(result.getAnalysisId()); // 분석 결과의 analysis_Id과 연동
+            recycleLog.setDisposalMethod(disposalMethod);
+            recycleLog.setAnalysisId(analysisId);
             recycleLog.setCreatedAt(ZonedDateTime.now());
             recycleLogRepository.save(recycleLog);
 
@@ -242,9 +276,9 @@ public class RecycleService {
             log.error("이미지 처리 중 IOException 발생: {}", e.getMessage(), e);
             throw new RuntimeException("이미지 처리 중 오류 발생", e);
         }
+
+        return resultInfo;
     }
-
-
 
     private String runPythonScript(String imgPath) {
         ProcessBuilder pb = new ProcessBuilder(

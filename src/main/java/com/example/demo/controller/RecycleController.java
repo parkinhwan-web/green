@@ -42,18 +42,11 @@ public class RecycleController {
                     .body(Map.of("message", "이미지 파일이 비어 있습니다."));
         }
 
-        long analysisId = analysisIdGenerator.getAndIncrement();
         Long userId = userDetails.getUser().getId();
+        Map<String, Object> result = recycleService.analyzeAndSave(image, userId);
 
-        recycleService.analyzeAndSave(image, userId);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("analysis_id", analysisId);
-        response.put("status", "processing");
-        response.put("message", "이미지 분석 요청이 접수되었습니다.");
-        response.put("created_at", ZonedDateTime.now().toString());
-
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+        result.putIfAbsent("status", "processing");
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(result);
     }
 
     /**
