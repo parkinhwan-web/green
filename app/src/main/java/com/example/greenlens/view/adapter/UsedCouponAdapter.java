@@ -59,11 +59,22 @@ public class UsedCouponAdapter extends RecyclerView.Adapter<UsedCouponAdapter.Co
         public void bind(Coupon coupon) {
             String formattedName = String.format("[%s] %s",
                     coupon.getBrandName(),
-                    coupon.getProductName());  // getName() -> getProductName()으로 수정
+                    coupon.getProductName());
 
             brandText.setText(coupon.getBrandName());
             nameText.setText(formattedName);
-            dateText.setText(coupon.getExpireDate() + "까지");
+
+            // 사용된 쿠폰의 경우 구매 날짜 표시
+            String dateText = coupon.getExpireDate();
+            if (dateText != null && !dateText.isEmpty()) {
+                // "까지" 텍스트가 이미 포함되어 있으면 그대로 사용, 아니면 추가
+                if (!dateText.contains("까지")) {
+                    dateText = dateText + " 구매";
+                }
+            } else {
+                dateText = "날짜 정보 없음";
+            }
+            this.dateText.setText(dateText);
 
             if (coupon.getImageResId() != 0) {
                 couponImage.setImageResource(coupon.getImageResId());
@@ -71,6 +82,10 @@ public class UsedCouponAdapter extends RecyclerView.Adapter<UsedCouponAdapter.Co
 
             // 사용된 쿠폰은 전체적으로 흐리게 표시
             itemView.setAlpha(0.5f);
+
+            // 디버깅 로그
+            android.util.Log.d("UsedCouponAdapter", "Binding used coupon - Brand: " + coupon.getBrandName() +
+                    ", Product: " + coupon.getProductName() + ", Date: " + dateText);
         }
     }
 }

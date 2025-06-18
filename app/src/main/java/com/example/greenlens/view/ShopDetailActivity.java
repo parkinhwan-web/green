@@ -111,8 +111,14 @@ public class ShopDetailActivity extends AppCompatActivity {
             User user = userManager.getCurrentUser();
             if (user != null) {
                 // 스타벅스 아메리카노와 ABC 초코쿠키쿠앤크만 구매 가능
-                if ((coupon.getBrandName().equals("스타벅스") && coupon.getProductName().equals("아메리카노")) ||
-                        (coupon.getBrandName().equals("CU") && coupon.getProductName().equals("ABC초코쿠키쿠앤크"))) {
+                boolean isStarbucksAmericano = coupon.getBrandName().equals("스타벅스") &&
+                        (coupon.getProductName().equals("아메리카노") ||
+                                coupon.getProductName().contains("아메리카노"));
+                boolean isCUCookie = coupon.getBrandName().equals("CU") &&
+                        (coupon.getProductName().equals("ABC초코쿠키쿠앤크") ||
+                                coupon.getProductName().contains("쿠키"));
+
+                if (isStarbucksAmericano || isCUCookie) {
                     int userPoints = user.getPoints();
                     if (userPoints >= coupon.getPoints()) {
                         // 구매 확인 다이얼로그 표시
@@ -155,30 +161,65 @@ public class ShopDetailActivity extends AppCompatActivity {
         }
 
         String authToken = userManager.getAuthToken();
+        if (authToken == null || authToken.isEmpty()) {
+            Toast.makeText(this, "인증 토큰이 없습니다. 다시 로그인해주세요.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        // 구매 API 요청 데이터 생성
-        Map<String, Object> purchaseRequest = new HashMap<>();
-        purchaseRequest.put("brandName", coupon.getBrandName());
-        purchaseRequest.put("productName", coupon.getProductName());
-        purchaseRequest.put("points", coupon.getPoints());
-        purchaseRequest.put("category", coupon.getCategory());
-        purchaseRequest.put("expireDate", coupon.getExpireDate());
+        // Bearer 토큰 형식 확인 및 수정
+        if (!authToken.startsWith("Bearer ")) {
+            authToken = "Bearer " + authToken;
+        }
+
+        // 쿠폰 ID 확인
+        if (coupon.getId() == null) {
+            Toast.makeText(this, "쿠폰 정보가 올바르지 않습니다.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 사용자 포인트 재확인
+        User currentUser = userManager.getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(this, "사용자 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (currentUser.getPoints() < coupon.getPoints()) {
+            Toast.makeText(this, "포인트가 부족합니다. 현재 보유 포인트: " + currentUser.getPoints() + "P", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 구매 진행 중 로그
+        android.util.Log.d("ShopDetailActivity", "Starting purchase - Coupon ID: " + coupon.getId() +
+                ", Brand: " + coupon.getBrandName() +
+                ", Product: " + coupon.getProductName() +
+                ", Points: " + coupon.getPoints() +
+                ", User Points: " + currentUser.getPoints());
 
         // 구매 API 호출
         apiService.purchaseCoupon(authToken, coupon.getId()).enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                android.util.Log.d("ShopDetailActivity", "Purchase API response received - Code: " + response.code());
+
                 if (response.isSuccessful() && response.body() != null) {
                     Map<String, Object> result = response.body();
-                    boolean success = (Boolean) result.getOrDefault("success", false);
 
-                    if (success) {
+                    // 응답 로그 출력
+                    android.util.Log.d("ShopDetailActivity", "Purchase response: " + result.toString());
+
+                    Boolean success = (Boolean) result.get("success");
+                    if (success != null && success) {
                         // 사용자 포인트 업데이트
                         User currentUser = userManager.getCurrentUser();
                         if (currentUser != null) {
-                            double remainingPoints = (double) result.get("remainingPoints");
-                            currentUser.setPoints((int) remainingPoints);
-                            userManager.saveUser(currentUser);
+                            Object remainingPointsObj = result.get("remainingPoints");
+                            if (remainingPointsObj instanceof Number) {
+                                int remainingPoints = ((Number) remainingPointsObj).intValue();
+                                currentUser.setPoints(remainingPoints);
+                                userManager.saveUser(currentUser);
+                                android.util.Log.d("ShopDetailActivity", "User points updated to: " + remainingPoints);
+                            }
                         }
 
                         Toast.makeText(ShopDetailActivity.this,
@@ -191,20 +232,46 @@ public class ShopDetailActivity extends AppCompatActivity {
                         finish();
                     } else {
                         String message = (String) result.getOrDefault("message", "구매에 실패했습니다.");
+                        android.util.Log.e("ShopDetailActivity", "Purchase failed - Message: " + message);
                         Toast.makeText(ShopDetailActivity.this, message, Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toast.makeText(ShopDetailActivity.this,
-                            "구매 처리 중 오류가 발생했습니다.",
-                            Toast.LENGTH_SHORT).show();
+                    // 에러 응답 처리
+                    String errorMessage = "구매 처리 중 오류가 발생했습니다.";
+                    if (response.code() == 401) {
+                        errorMessage = "인증이 만료되었습니다. 다시 로그인해주세요.";
+                    } else if (response.code() == 403) {
+                        errorMessage = "권한이 없습니다.";
+                    } else if (response.code() == 404) {
+                        errorMessage = "쿠폰을 찾을 수 없습니다.";
+                    } else if (response.code() == 400) {
+                        errorMessage = "잘못된 요청입니다.";
+                    } else if (response.code() == 500) {
+                        errorMessage = "서버 내부 오류입니다. 잠시 후 다시 시도해주세요.";
+                    }
+
+                    android.util.Log.e("ShopDetailActivity", "Purchase failed - Code: " + response.code());
+                    if (response.errorBody() != null) {
+                        try {
+                            String errorBody = response.errorBody().string();
+                            android.util.Log.e("ShopDetailActivity", "Error body: " + errorBody);
+                        } catch (Exception e) {
+                            android.util.Log.e("ShopDetailActivity", "Error reading error body", e);
+                        }
+                    }
+
+                    Toast.makeText(ShopDetailActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<Map<String, Object>> call, Throwable t) {
-                Toast.makeText(ShopDetailActivity.this,
-                        "네트워크 오류: " + t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
+                android.util.Log.e("ShopDetailActivity", "Network error during purchase", t);
+                String errorMessage = "네트워크 오류가 발생했습니다.";
+                if (t.getMessage() != null) {
+                    errorMessage += "\n" + t.getMessage();
+                }
+                Toast.makeText(ShopDetailActivity.this, errorMessage, Toast.LENGTH_LONG).show();
             }
         });
     }

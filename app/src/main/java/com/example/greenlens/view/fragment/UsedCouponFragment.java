@@ -1,6 +1,7 @@
 package com.example.greenlens.view.fragment;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,8 @@ import com.example.greenlens.api.ApiClient;
 import com.example.greenlens.api.ApiService;
 import com.example.greenlens.manager.UserManager;
 import com.example.greenlens.model.Coupon;
+import com.example.greenlens.model.User;
+import com.example.greenlens.util.DevLog;
 import com.example.greenlens.view.adapter.UsedCouponAdapter;
 
 import java.util.ArrayList;
@@ -31,6 +34,7 @@ public class UsedCouponFragment extends Fragment {
     private UsedCouponAdapter adapter;
     private ApiService apiService;
     private UserManager userManager;
+    private static final String TAG = "UsedCouponFragment";
 
     @Nullable
     @Override
@@ -55,33 +59,63 @@ public class UsedCouponFragment extends Fragment {
 
     private void loadUsedCoupons() {
         if (!userManager.isLoggedIn()) {
+            DevLog.d(TAG, "User not logged in");
             adapter.setCoupons(new ArrayList<>());
             return;
         }
 
         String authToken = userManager.getAuthToken();
-        Long userId = userManager.getCurrentUser().getUserId();
+        if (!authToken.startsWith("Bearer ")) {
+            authToken = "Bearer " + authToken;
+        }
+
+        User currentUser = userManager.getCurrentUser();
+        if (currentUser == null) {
+            DevLog.e(TAG, "Current user is null");
+            adapter.setCoupons(new ArrayList<>());
+            return;
+        }
+
+        Long userId = currentUser.getUserId();
+        DevLog.d(TAG, "Loading used coupons for user ID: " + userId);
 
         apiService.getUserCoupons(authToken, userId).enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                DevLog.d(TAG, "API Response - Code: " + response.code());
+
                 if (response.isSuccessful() && response.body() != null) {
                     Map<String, Object> result = response.body();
-                    List<Map<String, Object>> usedCoupons = (List<Map<String, Object>>) result.get("usedCoupons");
+                    DevLog.d(TAG, "Response body: " + result.toString());
 
-                    if (usedCoupons != null) {
+                    List<Map<String, Object>> usedCoupons = (List<Map<String, Object>>) result.get("usedCoupons");
+                    DevLog.d(TAG, "Used coupons data: " + usedCoupons);
+
+                    if (usedCoupons != null && !usedCoupons.isEmpty()) {
                         List<Coupon> coupons = convertToCoupons(usedCoupons);
+                        DevLog.d(TAG, "Converted " + coupons.size() + " used coupons");
                         adapter.setCoupons(coupons);
                     } else {
+                        DevLog.d(TAG, "No used coupons found");
                         adapter.setCoupons(new ArrayList<>());
                     }
                 } else {
+                    DevLog.e(TAG, "Failed to load used coupons - Code: " + response.code());
+                    if (response.errorBody() != null) {
+                        try {
+                            String errorBody = response.errorBody().string();
+                            DevLog.e(TAG, "Error body: " + errorBody);
+                        } catch (Exception e) {
+                            DevLog.e(TAG, "Error reading error body", e);
+                        }
+                    }
                     adapter.setCoupons(new ArrayList<>());
                 }
             }
 
             @Override
             public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                DevLog.e(TAG, "Failed to load used coupons", t);
                 adapter.setCoupons(new ArrayList<>());
             }
         });
@@ -97,6 +131,11 @@ public class UsedCouponFragment extends Fragment {
                 String productName = (String) data.get("productName");
                 String purchaseDate = (String) data.get("purchaseDate");
 
+                Log.d(TAG, "Converting used coupon data - ID: " + id +
+                        ", Brand: " + brandName +
+                        ", Product: " + productName +
+                        ", Purchase Date: " + purchaseDate);
+
                 Coupon coupon = new Coupon(brandName, productName, 0, "", purchaseDate, 0);
                 coupon.setId(id);
 
@@ -106,6 +145,7 @@ public class UsedCouponFragment extends Fragment {
 
                 coupons.add(coupon);
             } catch (Exception e) {
+                Log.e(TAG, "Error converting used coupon data", e);
                 e.printStackTrace();
             }
         }
